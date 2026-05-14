@@ -1,0 +1,79 @@
+import db, { ensureDbSchema } from "@/db/connection";
+import { type UserRole, type UserStatus, user } from "@/db/schema";
+import { getCookie } from "./cookies.service";
+import { verifyJWT } from "./jwt.service";
+import { eq } from "drizzle-orm";
+
+const AUTH_COOKIE_NAME = "transxact_project_auth_token";
+
+export interface SessionUser {
+  id: number;
+  name: string | null;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+}
+
+async function getSessionUserByToken(token: string): Promise<SessionUser> {
+  await ensureDbSchema();
+
+  const payload = verifyJWT(token);
+  const rows = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    })
+    .from(user)
+    .where(eq(user.id, payload.userId))
+    .limit(1);
+
+  if (rows.length === 0) {
+    throw new Error("You must be signed in to continue.");
+  }
+
+  return rows[0];
+}
+
+export async function requireSessionUser(): Promise<SessionUser> {
+  const authToken = await getCookie(AUTH_COOKIE_NAME);
+  if (!authToken) {
+    throw new Error("You must be signed in to continue.");
+  }
+
+  const currentUser = await getSessionUserByToken(authToken);
+  if (currentUser.status !== "active") {
+    throw new Error("You must be signed in to continue.");
+  }
+
+  return currentUser;
+}
+
+export async function requireAdminUser(): Promise<SessionUser> {
+  const currentUser = await requireSessionUser();
+  if (currentUser.role !== "admin") {
+    throw new Error("Admin access is required.");
+  }
+
+  return currentUser;
+}
+
+export async function getSessionUserOrNull(): Promise<SessionUser | null> {
+  const authToken = await getCookie(AUTH_COOKIE_NAME);
+  if (!authToken) {
+    return null;
+  }
+
+  try {
+    const currentUser = await getSessionUserByToken(authToken);
+    if (currentUser.status !== "active") {
+      return null;
+    }
+
+    return currentUser;
+  } catch {
+    return null;
+  }
+}

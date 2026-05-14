@@ -74,3 +74,24 @@ Follow these rules in order of priority.
 - Document auth/authorization impact for endpoint or permission changes.
 - Prevent major regressions by tracking basic performance budgets on critical
   routes.
+
+## 11) Code Documentation Rules
+
+- Document public functions, services, and shared utilities with purpose,
+  inputs, outputs, and side effects.
+- Explain non-obvious decisions in comments, especially around business rules,
+  security, and performance.
+- Keep comments current when code changes.
+- Avoid obvious comments; prioritize intent and constraints.
+- Add short folder-level READMEs for complex modules.
+
+## 12) App Documentation Rules
+
+- Keep the root README updated with setup, environment variables, run commands,
+  test commands, and troubleshooting.
+- Maintain architecture notes for key flows such as auth, data access, and
+  external integrations.
+- Document API contracts and error behavior for each endpoint or server action.
+- For database changes, include migration notes, rollback plan, and backfill
+  details.
+- Add release notes or changelog entries for user-facing behavior changes.

@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Transxact Projects
 
-## Getting Started
+Transxact Projects is a Next.js + Drizzle + SQLite workspace app with:
 
-First, run the development server:
+- project, task, and issue workflow tracking
+- direct 1:1 in-app messaging
+- in-app notifications (bell dropdown + notification center page)
+- email notifications with retry queue (Nodemailer)
+- in-app admin abuse-report queue
+
+## Requirements
+
+- Node.js 20+
+- npm
+- SMTP credentials for outgoing email
+
+## Environment variables
+
+Create `.env`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+DB_FILE_NAME=./transxact.db
+JWT_SECRET=replace-with-strong-secret
+APP_BASE_URL=http://localhost:3000
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=no-reply@example.com
+SMTP_PASS=replace-with-smtp-password
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Install and run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open `http://localhost:3000`.
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+- `/` dashboard
+- `/projects` project workflow
+- `/tasks` task workflow
+- `/issues` issue workflow
+- `/messages` direct messages
+- `/notifications` notification center and preference controls
+- `/admin/reports` admin abuse-report queue
+- `/auth` login
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Lint and build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npm run build
+```
 
-## Deploy on Vercel
+## Database and migrations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- schema definition: `db/schema.ts`
+- compatibility bootstrapping: `db/connection.ts` (`ensureDbSchema`)
+- SQL migrations: `drizzle/*.sql`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Apply schema changes with:
+
+```bash
+npm run db:push
+```
+
+## Notification and email notes
+
+- In-app notifications are stored in `notification`.
+- Email notifications are queued in `notification_email_queue`.
+- Delivery/read events are recorded in `notification_delivery_log`.
+- An authenticated in-app worker periodically processes due email queue items.
