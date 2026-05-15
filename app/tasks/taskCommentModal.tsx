@@ -23,14 +23,14 @@ interface TaskCommentModalProps {
 }
 
 const AVATAR_COLORS = [
-  "var(--brand)",
-  "#e07c3c",
-  "#4c9a5e",
-  "#8b5cf6",
-  "#e74c3c",
-  "#3498db",
-  "#1abc9c",
-  "#9b59b6",
+  "var(--avatar-0)",
+  "var(--avatar-1)",
+  "var(--avatar-2)",
+  "var(--avatar-3)",
+  "var(--avatar-4)",
+  "var(--avatar-5)",
+  "var(--avatar-6)",
+  "var(--avatar-7)",
 ];
 
 function getInitials(label: string): string {

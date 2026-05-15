@@ -18,6 +18,14 @@
   --border: #d3ddee;
   --border-strong: #bbc9df;
   --shadow-soft: 0 18px 40px -30px rgb(15 23 42 / 55%);
+  --avatar-0: var(--brand);
+  --avatar-1: #e07c3c;
+  --avatar-2: #4c9a5e;
+  --avatar-3: #8b5cf6;
+  --avatar-4: #e74c3c;
+  --avatar-5: #3498db;
+  --avatar-6: #1abc9c;
+  --avatar-7: #9b59b6;
 }
 
 :root[data-theme="dark"] {
@@ -40,6 +48,14 @@
   --border: #2e4067;
   --border-strong: #405584;
   --shadow-soft: 0 18px 40px -26px rgb(2 6 23 / 80%);
+  --avatar-0: var(--brand);
+  --avatar-1: #f59e5c;
+  --avatar-2: #6cbd7e;
+  --avatar-3: #ab7cf6;
+  --avatar-4: #f0705c;
+  --avatar-5: #54b8fb;
+  --avatar-6: #3adbbc;
+  --avatar-7: #bb7bda;
 }
 
 *,
@@ -1478,6 +1494,18 @@ a {
   background: #f0fdf4;
 }
 
+:root[data-theme="dark"] .kanban-col.is-new {
+  background: #1a2744;
+}
+
+:root[data-theme="dark"] .kanban-col.is-active {
+  background: #1f2a1a;
+}
+
+:root[data-theme="dark"] .kanban-col.is-done {
+  background: #0f2a1f;
+}
+
 .kanban-col-header {
   display: flex;
   align-items: center;
@@ -1512,6 +1540,21 @@ a {
 .kanban-col.is-done .kanban-col-count {
   color: #16a34a;
   background: #bbf7d0;
+}
+
+:root[data-theme="dark"] .kanban-col.is-new .kanban-col-count {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+:root[data-theme="dark"] .kanban-col.is-active .kanban-col-count {
+  color: #fbbf24;
+  background: #2a2a1a;
+}
+
+:root[data-theme="dark"] .kanban-col.is-done .kanban-col-count {
+  color: var(--success);
+  background: var(--success-soft);
 }
 
 .kanban-card {
