@@ -13,6 +13,10 @@ import {
   workItemComment,
 } from "@/db/schema";
 import {
+  listActionsByTask,
+  type ActionItem,
+} from "./action.service";
+import {
   createNotifications,
   ensureEntitySubscriptions,
   listUserEntitySubscriptionState,
@@ -1232,6 +1236,7 @@ export interface TaskDetailItem {
   createdAt: string;
   isFollowing: boolean;
   comments: WorkItemCommentThreadItem[];
+  actions: ActionItem[];
 }
 
 export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem> {
@@ -1275,6 +1280,9 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
   const comments = await listTaskCommentsByTaskId([taskId], currentUser.id);
   const taskComments = comments.get(taskId) ?? [];
 
+  // Fetch actions
+  const taskActions = await listActionsByTask(taskId);
+
   // Fetch following status
   const followingState = await listUserEntitySubscriptionState("task", [taskId]);
   const isFollowing = followingState.get(taskId) ?? false;
@@ -1299,6 +1307,7 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
     createdAt: row.createdAt,
     isFollowing,
     comments: taskComments,
+    actions: taskActions,
   };
 }
 

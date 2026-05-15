@@ -71,6 +71,10 @@ function resolvePageMeta(pathname: string): PageMeta {
     return { title: "Notification center", icon: FiBell };
   }
 
+  if (pathname.startsWith("/admin/users")) {
+    return { title: "User Management", icon: FiShield };
+  }
+
   if (pathname.startsWith("/admin/reports")) {
     return { title: "Abuse reports", icon: FiShield };
   }

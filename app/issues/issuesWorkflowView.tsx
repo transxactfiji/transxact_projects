@@ -344,7 +344,7 @@ export default function IssuesWorkflowView({
                 issues.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <Link href={`/issues/${item.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                      <Link href={`/issues/${item.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
                         <div className="workflow-title">{item.title}</div>
                         {item.description ? (
                           <p className="workflow-subtext">{item.description}</p>

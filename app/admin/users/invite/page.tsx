@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FiArrowLeft, FiMail, FiUserPlus } from "react-icons/fi";
+import { FiArrowLeft, FiMail, FiUserPlus, FiCheckCircle } from "react-icons/fi";
 import { toast } from "sonner";
+import AppButton from "@/app/ui/appButton";
 
 export default function InviteUserPage() {
   const [loading, setLoading] = useState(false);
@@ -54,116 +55,129 @@ export default function InviteUserPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          href="/admin/users"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-8 font-medium transition"
-        >
-          <FiArrowLeft size={18} /> Back to Users
-        </Link>
+    <section className="workflow-stack">
+      <Link href="/admin/users" className="text-link">
+        <span className="icon-with-label">
+          <FiArrowLeft /> Back to Users
+        </span>
+      </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Invite New User</h1>
-            <p className="text-gray-600 mt-2">
-              Send an invitation link to a new user to join the platform
+      <div className="card">
+        <div className="card-header">
+          <div>
+            <h2>Invite New User</h2>
+            <p>Send an invitation link to a new user to join the platform</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleInvite} className="form-stack" style={{ marginTop: 0 }}>
+          <div className="field-wrap">
+            <label htmlFor="email" className="field-label">
+              Email Address
+            </label>
+            <div style={{ position: "relative" }}>
+              <FiMail
+                style={{ position: "absolute", left: "0.72rem", top: "0.7rem", color: "var(--text-muted)" }}
+              />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="text-input"
+                style={{ paddingLeft: "2.2rem" }}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="field-wrap">
+            <label htmlFor="role" className="field-label">
+              Role
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as "admin" | "member")}
+              className="filter-input"
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <p className="field-note">
+              {role === "admin"
+                ? "Admins can manage users and system settings"
+                : "Members have basic access to projects and tasks"}
             </p>
           </div>
 
-          <form onSubmit={handleInvite} className="space-y-6 mb-8">
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <FiMail className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-            </div>
+          <AppButton
+            type="submit"
+            fullWidth
+            disabled={loading}
+            isLoading={loading}
+            loadingLabel="Sending..."
+            startIcon={<FiUserPlus />}
+          >
+            Send Invitation
+          </AppButton>
+        </form>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-2">
-                Role
-              </label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value as "admin" | "member")}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm font-medium"
-              >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-              <p className="mt-2 text-sm text-gray-600">
-                {role === "admin"
-                  ? "👤 Admins can manage users and system settings"
-                  : "👥 Members have basic access to projects and tasks"}
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
-            >
-              <FiUserPlus size={20} /> {loading ? "Sending..." : "Send Invitation"}
-            </button>
-          </form>
-
-          {invitedUsers.length > 0 && (
-            <div className="border-t border-gray-200 pt-8">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Recently Invited Users</h2>
-              <div className="space-y-3">
-                {invitedUsers.map((user, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-600 capitalize">Role: <span className="font-medium text-gray-900">{user.role}</span></p>
-                    </div>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-green-700 bg-green-200">✓ Invited</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              ℹ️ How it works
+        {invitedUsers.length > 0 && (
+          <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--border)" }}>
+            <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>
+              Recently Invited Users
             </h3>
-            <ul className="text-sm text-gray-700 space-y-2">
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">1.</span>
-                <span>Enter the user&apos;s email address and select their role</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">2.</span>
-                <span>An invitation email will be sent to them</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">3.</span>
-                <span>They will receive a link to join and set up their account</span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">4.</span>
-                <span>Admin users can manage other users and system settings</span>
-              </li>
-            </ul>
+            <div className="form-stack" style={{ marginTop: 0 }}>
+              {invitedUsers.map((user, index) => (
+                <div
+                  key={index}
+                  className="inline-status is-success"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                >
+                  <div>
+                    <p style={{ fontWeight: 600 }}>{user.email}</p>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "0.84rem" }}>
+                      Role: <span style={{ fontWeight: 500 }}>{user.role}</span>
+                    </p>
+                  </div>
+                  <span
+                    className="workflow-status-pill"
+                    style={{
+                      background: "color-mix(in srgb, var(--success) 20%, transparent)",
+                      color: "var(--success)",
+                      border: "none",
+                      fontWeight: 700,
+                    }}
+                  >
+                    <FiCheckCircle style={{ marginRight: "0.25rem" }} /> Invited
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="inline-status is-info">
+          <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>
+            How it works
+          </h3>
+          <div className="form-stack" style={{ marginTop: 0, gap: "0.5rem" }}>
+            {[
+              "Enter the user's email address and select their role",
+              "An invitation email will be sent to them",
+              "They will receive a link to join and set up their account",
+              "Admin users can manage other users and system settings",
+            ].map((step, i) => (
+              <p key={i} style={{ color: "var(--text-secondary)", fontSize: "0.88rem", display: "flex", gap: "0.4rem" }}>
+                <strong style={{ color: "var(--info)" }}>{i + 1}.</strong>
+                <span>{step}</span>
+              </p>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

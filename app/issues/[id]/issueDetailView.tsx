@@ -149,18 +149,16 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
   return (
     <section className="workflow-stack">
       {/* Back Navigation */}
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-        <Link href="/issues">
-          <AppButton startIcon={<FiArrowLeft aria-hidden="true" />}>Back</AppButton>
-        </Link>
-      </div>
+      <Link href="/issues" className="text-link" style={{ marginBottom: 0 }}>
+        <span className="icon-with-label"><FiArrowLeft /> Back</span>
+      </Link>
 
       {/* Main Content */}
       <section className="card">
         <div className="card-header">
           <div>
             <h1>{issue.title}</h1>
-            <p className="secondary-text">{issue.projectName}</p>
+            <p className="workflow-subtext">{issue.projectName}</p>
           </div>
         </div>
 
@@ -189,7 +187,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
             {issue.taskId && (
               <div className="field-wrap">
                 <label className="field-label">Related Task</label>
-                <Link href={`/tasks/${issue.taskId}`} style={{ color: "var(--color-link)" }}>
+                <Link href={`/tasks/${issue.taskId}`} className="text-link">
                   {issue.taskTitle}
                 </Link>
               </div>
@@ -268,25 +266,25 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
                       )}
                     </div>
                     {comment.isOwn && (
-                      <div style={{ display: "flex", gap: "0.5rem", marginLeft: "1rem" }}>
+                      <div className="workflow-actions" style={{ marginLeft: "1rem" }}>
                         {editingCommentId === comment.id ? (
                           <>
                             <AppButton
+                              variant="ghost"
                               onClick={() => void handleSaveEditComment(comment.id)}
                               disabled={isEditingCommentId === comment.id}
                               isLoading={isEditingCommentId === comment.id}
                               loadingLabel="Saving..."
-                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.875rem" }}
                             >
                               Save
                             </AppButton>
                             <AppButton
+                              variant="ghost"
                               onClick={() => {
                                 setEditingCommentId(null);
                                 setEditingCommentBody("");
                               }}
                               disabled={isEditingCommentId === comment.id}
-                              style={{ padding: "0.25rem 0.5rem", fontSize: "0.875rem" }}
                             >
                               Cancel
                             </AppButton>
@@ -296,15 +294,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
                             <button
                               onClick={() => handleEditComment(comment.id, comment.body)}
                               disabled={isDeletingCommentId === comment.id}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "inherit",
-                                padding: "0.25rem",
-                                display: "flex",
-                                alignItems: "center",
-                              }}
+                              className="text-link-button"
                               title="Edit comment"
                             >
                               <FiEdit2 size={16} />
@@ -312,15 +302,8 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
                             <button
                               onClick={() => void handleDeleteComment(comment.id)}
                               disabled={isDeletingCommentId === comment.id}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                color: "inherit",
-                                padding: "0.25rem",
-                                display: "flex",
-                                alignItems: "center",
-                              }}
+                              className="text-link-button"
+                              style={{ color: "var(--error)" }}
                               title="Delete comment"
                             >
                               <FiTrash2 size={16} />

@@ -1,4 +1,10 @@
-import { int, index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  int,
+  index,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export type UserRole = "admin" | "member";
 export type UserStatus = "active" | "inactive" | "pending";
@@ -28,7 +34,12 @@ export type NotificationCategory =
   | "task_activity"
   | "issue_activity"
   | "abuse_report";
-export type NotificationSourceType = "conversation" | "project" | "task" | "issue" | "report";
+export type NotificationSourceType =
+  | "conversation"
+  | "project"
+  | "task"
+  | "issue"
+  | "report";
 export type NotificationChannel = "in_app" | "email";
 export type NotificationDeliveryStatus = "delivered" | "failed" | "read";
 export type NotificationEmailQueueStatus = "pending" | "sent" | "failed";
@@ -72,6 +83,22 @@ export const task = sqliteTable("task", {
   status: text().notNull().$type<TaskStatus>().default("not_started"),
   dueAt: text().notNull(),
   createdByUserId: int().references(() => user.id),
+  createdAt: text().notNull(),
+  updatedAt: text(),
+  deletedAt: text(),
+});
+
+export const action = sqliteTable("action", {
+  id: int().primaryKey({ autoIncrement: true }),
+  projectId: int()
+    .notNull()
+    .references(() => project.id),
+  taskId: int().references(() => task.id),
+  createdByUserId: int()
+    .notNull()
+    .references(() => user.id),
+  name: text().notNull(),
+  description: text(),
   createdAt: text().notNull(),
   updatedAt: text(),
   deletedAt: text(),
@@ -293,10 +320,9 @@ export const notificationDeliveryLog = sqliteTable(
     createdAt: text().notNull(),
   },
   (table) => ({
-    deliveryLogNotificationIdx: index("notification_delivery_log_notification_idx").on(
-      table.notificationId,
-      table.createdAt,
-    ),
+    deliveryLogNotificationIdx: index(
+      "notification_delivery_log_notification_idx",
+    ).on(table.notificationId, table.createdAt),
   }),
 );
 
@@ -314,7 +340,10 @@ export const notificationEmailQueue = sqliteTable(
     subject: text().notNull(),
     textBody: text().notNull(),
     htmlBody: text(),
-    status: text().notNull().$type<NotificationEmailQueueStatus>().default("pending"),
+    status: text()
+      .notNull()
+      .$type<NotificationEmailQueueStatus>()
+      .default("pending"),
     attempts: int().notNull().default(0),
     sendAfterAt: text().notNull(),
     sentAt: text(),
@@ -384,7 +413,13 @@ export const auditEvent = sqliteTable("audit_event", {
   createdAt: text().notNull(),
 });
 
-export type AuditLogAction = "created" | "updated" | "deleted" | "role_changed" | "status_changed" | "invited";
+export type AuditLogAction =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "role_changed"
+  | "status_changed"
+  | "invited";
 export const auditLog = sqliteTable(
   "audit_log",
   {
@@ -402,7 +437,13 @@ export const auditLog = sqliteTable(
     createdAt: text().notNull(),
   },
   (table) => ({
-    targetUserIdx: index("audit_log_target_user_idx").on(table.targetUserId, table.createdAt),
-    adminUserIdx: index("audit_log_admin_user_idx").on(table.adminUserId, table.createdAt),
+    targetUserIdx: index("audit_log_target_user_idx").on(
+      table.targetUserId,
+      table.createdAt,
+    ),
+    adminUserIdx: index("audit_log_admin_user_idx").on(
+      table.adminUserId,
+      table.createdAt,
+    ),
   }),
 );
