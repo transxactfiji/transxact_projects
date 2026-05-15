@@ -1,10 +1,11 @@
 "use server";
 
+import crypto from "node:crypto";
 import { createUnifiedEmailContent, sendEmail } from "./email.service";
 import db, { ensureDbSchema } from "@/db/connection";
-import { type UserRole, user } from "@/db/schema";
+import { type UserRole, user, userSession } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { setCookie, deleteCookie } from "./cookies.service";
+import { setCookie, deleteCookie, getCookie } from "./cookies.service";
 import { generateJWT } from "./jwt.service";
 
 const AUTH_COOKIE_NAME = "transxact_project_auth_token";
@@ -109,6 +110,7 @@ export async function requestLoginCode(
 export async function login(
   email: string,
   code: string,
+  deviceLabel?: string,
 ): Promise<{ token: string }> {
   await ensureDbSchema();
 
@@ -164,6 +166,20 @@ export async function login(
     role,
   });
 
+  const sessionExpiresAt = new Date(
+    Date.now() + SESSION_TTL_SECONDS * 1000,
+  ).toISOString();
+
+  await db.insert(userSession).values({
+    userId: existingUser.id,
+    token: crypto.createHash("sha256").update(jwt).digest("hex"),
+    deviceLabel: deviceLabel ?? "Unknown device",
+    createdAt: nowIso,
+    lastUsedAt: nowIso,
+    expiresAt: sessionExpiresAt,
+    isActive: 1,
+  });
+
   await setCookie(AUTH_COOKIE_NAME, jwt, {
     maxAge: SESSION_TTL_SECONDS,
   });
@@ -185,5 +201,13 @@ export async function login(
 }
 
 export async function logout(): Promise<void> {
+  const token = await getCookie(AUTH_COOKIE_NAME);
+  if (token) {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    await db
+      .update(userSession)
+      .set({ isActive: 0 })
+      .where(eq(userSession.token, tokenHash));
+  }
   await deleteCookie(AUTH_COOKIE_NAME);
 }

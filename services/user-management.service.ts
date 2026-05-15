@@ -41,11 +41,6 @@ interface AuditLogEntry {
   createdAt: string;
 }
 
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
 async function logAuditAction(
   adminUserId: number,
   targetUserId: number,
@@ -229,54 +224,6 @@ export async function updateUserStatus(
   return updatedUser;
 }
 
-export async function inviteUser(
-  adminUserId: number,
-  email: string,
-  role: UserRole,
-): Promise<typeof user.$inferSelect> {
-  await ensureDbSchema();
-
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!validateEmail(normalizedEmail)) {
-    throw new Error("Invalid email address");
-  }
-
-  const existingUser = await db
-    .select()
-    .from(user)
-    .where(eq(user.email, normalizedEmail))
-    .limit(1);
-
-  if (existingUser.length > 0) {
-    throw new Error("User already exists with this email");
-  }
-
-  const now = new Date().toISOString();
-  const newUser = await db
-    .insert(user)
-    .values({
-      email: normalizedEmail,
-      name: null,
-      role,
-      status: "pending",
-      invitedByUserId: adminUserId,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
-
-  if (!newUser[0]) throw new Error("Failed to create user");
-
-  await logAuditAction(adminUserId, newUser[0].id, "invited", undefined, role, {
-    invitedEmail: normalizedEmail,
-  });
-
-  // Send invitation email
-  await sendInvitationEmail(normalizedEmail, role);
-
-  return newUser[0];
-}
-
 export async function deleteUser(
   adminUserId: number,
   targetUserId: number,
@@ -445,25 +392,4 @@ async function sendStatusChangeEmail(
   });
 }
 
-async function sendInvitationEmail(email: string, role: string): Promise<void> {
-  const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/login`;
 
-  const content = createUnifiedEmailContent({
-    headline: "You're invited to Transxact",
-    messageLines: [
-      `You have been invited to join Transxact as ${role}.`,
-      "Click the button below to sign in and get started.",
-    ],
-    actionLabel: "Sign in to Transxact",
-    actionUrl: loginUrl,
-    footerLines: ["If you were not expecting this invitation, you can ignore this email."],
-    previewText: "You're invited to join Transxact",
-  });
-
-  await sendEmail({
-    to: email,
-    subject: "Invitation to Join Transxact",
-    text: content.text,
-    html: content.html,
-  });
-}

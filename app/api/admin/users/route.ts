@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminUserIdFromRequest } from "@/services/auth-request.service";
-import { listUsers, inviteUser } from "@/services/user-management.service";
+import { listUsers } from "@/services/user-management.service";
+import { createInvite } from "@/services/invite.service";
 import type { UserRole, UserStatus } from "@/db/schema";
 
 export async function GET(request: NextRequest) {
@@ -44,9 +45,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newUser = await inviteUser(adminUserId, email, role as UserRole);
+    const result = await createInvite({
+      email,
+      role: role as UserRole,
+      invitedByUserId: adminUserId,
+    });
 
-    return NextResponse.json(newUser, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     const status = message.includes("Unauthorized") ? 401 : message.includes("Forbidden") ? 403 : message.includes("already exists") ? 409 : 400;

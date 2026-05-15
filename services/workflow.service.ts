@@ -18,6 +18,11 @@ import {
   type ActionItem,
 } from "./action.service";
 import {
+  listAttachmentsByTask,
+  listAttachmentsByIssue,
+  type AttachmentItem,
+} from "./attachment.service";
+import {
   createNotifications,
   ensureEntitySubscriptions,
   listUserEntitySubscriptionState,
@@ -719,6 +724,47 @@ export async function archiveProject(projectId: number): Promise<void> {
   publishRealtimeRefreshAll();
 }
 
+export async function updateProject(projectId: number, name: string): Promise<void> {
+  const currentUser = await requireSessionUser();
+  const normalizedName = normalizeTitle(name, "Project name");
+  const nowIso = new Date().toISOString();
+
+  const rows = await db
+    .select({ name: project.name, createdByUserId: project.createdByUserId })
+    .from(project)
+    .where(and(eq(project.id, projectId), isNull(project.deletedAt)))
+    .limit(1);
+  if (rows.length === 0) {
+    throw new Error("Project not found.");
+  }
+
+  const oldName = rows[0].name;
+  await db
+    .update(project)
+    .set({ name: normalizedName, updatedAt: nowIso })
+    .where(eq(project.id, projectId));
+
+  const recipients = await resolveEntityNotificationRecipients({
+    entityType: "project",
+    entityId: projectId,
+    creatorUserId: rows[0].createdByUserId,
+    actorUserId: currentUser.id,
+  });
+  await createNotifications({
+    recipientUserIds: recipients,
+    actorUserId: currentUser.id,
+    category: "project_activity",
+    type: "project_updated",
+    title: `Project renamed: ${oldName} → ${normalizedName}`,
+    body: `${currentUser.name ?? "Someone"} renamed this project.`,
+    href: "/projects",
+    sourceType: "project",
+    sourceId: projectId,
+    emailDelayMinutes: 0,
+  });
+  publishRealtimeRefreshAll();
+}
+
 export async function createTask(input: CreateTaskInput): Promise<void> {
   const currentUser = await requireSessionUser();
   const title = normalizeTitle(input.title, "Task title");
@@ -838,6 +884,82 @@ export async function advanceTaskStatus(taskId: number): Promise<TaskStatus> {
   publishRealtimeRefresh([currentUser.id, ...recipients]);
 
   return nextStatus;
+}
+
+export async function updateTask(
+  taskId: number,
+  fields: { title?: string; description?: string; dueOn?: string; assigneeUserId?: number },
+): Promise<void> {
+  const currentUser = await requireSessionUser();
+
+  const rows = await db
+    .select({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      assigneeUserId: task.assigneeUserId,
+      createdByUserId: task.createdByUserId,
+    })
+    .from(task)
+    .where(and(eq(task.id, taskId), isNull(task.deletedAt)))
+    .limit(1);
+  if (rows.length === 0) {
+    throw new Error("Task not found.");
+  }
+
+  const updates: Partial<typeof task.$inferInsert> = {};
+  const changed: string[] = [];
+  const nowIso = new Date().toISOString();
+
+  if (fields.title !== undefined) {
+    updates.title = normalizeTitle(fields.title, "Task title");
+    changed.push("title");
+  }
+  if (fields.description !== undefined) {
+    updates.description = normalizeDescription(fields.description);
+    changed.push("description");
+  }
+  if (fields.dueOn !== undefined) {
+    updates.dueAt = parseDueDate(fields.dueOn);
+    changed.push("due date");
+  }
+  if (fields.assigneeUserId !== undefined) {
+    await requireActiveAssignee(fields.assigneeUserId);
+    updates.assigneeUserId = fields.assigneeUserId;
+    changed.push("assignee");
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return;
+  }
+
+  updates.updatedAt = nowIso;
+  await db.update(task).set(updates).where(eq(task.id, taskId));
+
+  await ensureEntitySubscriptions("task", taskId, [
+    rows[0].createdByUserId,
+    fields.assigneeUserId ?? rows[0].assigneeUserId,
+  ]);
+  const recipients = await resolveEntityNotificationRecipients({
+    entityType: "task",
+    entityId: taskId,
+    creatorUserId: rows[0].createdByUserId,
+    assigneeUserId: rows[0].assigneeUserId,
+    actorUserId: currentUser.id,
+  });
+  await createNotifications({
+    recipientUserIds: recipients,
+    actorUserId: currentUser.id,
+    category: "task_activity",
+    type: "task_updated",
+    title: `Task updated: ${rows[0].title}`,
+    body: `${currentUser.name ?? "Someone"} updated ${changed.join(", ")}.`,
+    href: `/tasks?taskId=${taskId}`,
+    sourceType: "task",
+    sourceId: taskId,
+    emailDelayMinutes: 0,
+  });
+  publishRealtimeRefresh([currentUser.id, ...recipients]);
 }
 
 export async function addTaskComment(taskId: number, rawCommentBody: string): Promise<void> {
@@ -1071,6 +1193,76 @@ export async function advanceIssueStatus(issueId: number): Promise<IssueStatus> 
   publishRealtimeRefresh([currentUser.id, ...recipients]);
 
   return nextStatus;
+}
+
+export async function updateIssue(
+  issueId: number,
+  fields: { title?: string; description?: string; assigneeUserId?: number | null },
+): Promise<void> {
+  const currentUser = await requireSessionUser();
+
+  const rows = await db
+    .select({
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      assigneeUserId: issue.assigneeUserId,
+      createdByUserId: issue.createdByUserId,
+    })
+    .from(issue)
+    .where(and(eq(issue.id, issueId), isNull(issue.deletedAt)))
+    .limit(1);
+  if (rows.length === 0) {
+    throw new Error("Issue not found.");
+  }
+
+  const updates: Partial<typeof issue.$inferInsert> = {};
+  const changed: string[] = [];
+  const nowIso = new Date().toISOString();
+
+  if (fields.title !== undefined) {
+    updates.title = normalizeTitle(fields.title, "Issue title");
+    changed.push("title");
+  }
+  if (fields.description !== undefined) {
+    updates.description = normalizeDescription(fields.description);
+    changed.push("description");
+  }
+  if (fields.assigneeUserId !== undefined) {
+    if (fields.assigneeUserId !== null) {
+      await requireActiveAssignee(fields.assigneeUserId);
+    }
+    updates.assigneeUserId = fields.assigneeUserId;
+    changed.push("assignee");
+  }
+
+  updates.updatedAt = nowIso;
+  await db.update(issue).set(updates).where(eq(issue.id, issueId));
+
+  await ensureEntitySubscriptions("issue", issueId, [
+    rows[0].createdByUserId,
+    fields.assigneeUserId ?? rows[0].assigneeUserId,
+  ]);
+  const recipients = await resolveEntityNotificationRecipients({
+    entityType: "issue",
+    entityId: issueId,
+    creatorUserId: rows[0].createdByUserId,
+    assigneeUserId: rows[0].assigneeUserId,
+    actorUserId: currentUser.id,
+  });
+  await createNotifications({
+    recipientUserIds: recipients,
+    actorUserId: currentUser.id,
+    category: "issue_activity",
+    type: "issue_updated",
+    title: `Issue updated: ${rows[0].title}`,
+    body: `${currentUser.name ?? "Someone"} updated ${changed.join(", ")}.`,
+    href: `/issues?issueId=${issueId}`,
+    sourceType: "issue",
+    sourceId: issueId,
+    emailDelayMinutes: 0,
+  });
+  publishRealtimeRefresh([currentUser.id, ...recipients]);
 }
 
 export async function addIssueComment(
@@ -1396,6 +1588,7 @@ export interface TaskDetailItem {
   isFollowing: boolean;
   comments: WorkItemCommentThreadItem[];
   actions: ActionItem[];
+  attachments: AttachmentItem[];
 }
 
 export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem> {
@@ -1446,6 +1639,9 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
   const followingState = await listUserEntitySubscriptionState("task", [taskId]);
   const isFollowing = followingState.get(taskId) ?? false;
 
+  // Fetch attachments
+  const attachments = await listAttachmentsByTask(taskId);
+
   // Use the current user name as fallback for creator
   const creatorName = row.createdByUserId === currentUser.id ? "You" : "Creator";
 
@@ -1467,6 +1663,7 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
     isFollowing,
     comments: taskComments,
     actions: taskActions,
+    attachments,
   };
 }
 
@@ -1486,6 +1683,7 @@ export interface IssueDetailItem {
   createdAt: string;
   isFollowing: boolean;
   comments: WorkItemCommentThreadItem[];
+  attachments: AttachmentItem[];
 }
 
 export async function getIssueDetailById(issueId: number): Promise<IssueDetailItem> {
@@ -1532,6 +1730,9 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
   const followingState = await listUserEntitySubscriptionState("issue", [issueId]);
   const isFollowing = followingState.get(issueId) ?? false;
 
+  // Fetch attachments
+  const attachments = await listAttachmentsByIssue(issueId);
+
   // Use the current user name as fallback for creator
   const creatorName = row.createdByUserId === currentUser.id ? "You" : "Creator";
 
@@ -1551,6 +1752,7 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
     createdAt: row.createdAt,
     isFollowing,
     comments: issueComments,
+    attachments,
   };
 }
 

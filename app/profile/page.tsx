@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FiSave, FiUser } from "react-icons/fi";
+import { useState, useEffect, useCallback } from "react";
+import { FiMonitor, FiSave, FiUser, FiX } from "react-icons/fi";
 import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
 import TextField from "@/app/ui/textField";
@@ -32,6 +32,34 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<FormStatus | null>(null);
 
+  interface SessionItem {
+    id: number;
+    deviceLabel: string;
+    ipAddress: string | null;
+    createdAt: string;
+    lastUsedAt: string;
+    expiresAt: string;
+    isActive: number;
+  }
+
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revokingId, setRevokingId] = useState<number | null>(null);
+
+  const fetchSessions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sessions", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.sessions);
+      }
+    } catch {
+      // silent
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -46,7 +74,31 @@ export default function ProfilePage() {
         setLoading(false);
       }
     })();
-  }, []);
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const handleRevokeSession = async (sessionId: number): Promise<void> => {
+    setRevokingId(sessionId);
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to revoke session");
+      toast.success("Session revoked");
+      fetchSessions();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to revoke session";
+      toast.error(msg);
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  function formatDateTime(isoDate: string): string {
+    const d = new Date(isoDate);
+    return Number.isNaN(d.getTime()) ? "Unknown" : d.toLocaleString();
+  }
 
   const handleSave = async () => {
     const trimmed = name.trim();
@@ -173,6 +225,74 @@ export default function ProfilePage() {
             >
               Save changes
             </AppButton>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h2 className="icon-with-label">
+              <FiMonitor aria-hidden="true" />
+              <span>Sessions</span>
+            </h2>
+          </div>
+
+          <div className="table-wrap">
+            {sessionsLoading ? (
+              <p className="empty-row">Loading sessions...</p>
+            ) : sessions.length === 0 ? (
+              <p className="empty-row">No active sessions.</p>
+            ) : (
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Device</th>
+                    <th scope="col">Last used</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((s) => (
+                    <tr key={s.id}>
+                      <td style={{ fontWeight: "500" }}>
+                        <span className="icon-with-label">
+                          <FiMonitor size={14} />
+                          <span>{s.deviceLabel}</span>
+                        </span>
+                      </td>
+                      <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(s.lastUsedAt)}</td>
+                      <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(s.createdAt)}</td>
+                      <td>
+                        <span
+                          className="workflow-status-pill"
+                          style={{
+                            background: s.isActive ? "var(--success-soft)" : "var(--error-soft)",
+                            color: s.isActive ? "var(--success)" : "var(--error)",
+                            border: "none",
+                          }}
+                        >
+                          {s.isActive ? "Active" : "Revoked"}
+                        </span>
+                      </td>
+                      <td>
+                        {s.isActive && (
+                          <AppButton
+                            variant="ghost"
+                            onClick={() => void handleRevokeSession(s.id)}
+                            disabled={revokingId === s.id}
+                            isLoading={revokingId === s.id}
+                            loadingLabel="Revoking..."
+                          >
+                            <FiX size={14} />
+                          </AppButton>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>

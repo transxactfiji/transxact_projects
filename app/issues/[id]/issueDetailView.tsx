@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ReactElement } from "react";
 import { toast } from "sonner";
-import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye } from "react-icons/fi";
+import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye, FiPaperclip, FiDownload } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import {
@@ -14,6 +14,7 @@ import {
   editIssueComment,
   advanceIssueStatus,
   setIssueFollow,
+  updateIssue,
   type IssueDetailItem,
 } from "@/services/workflow.service";
 
@@ -58,6 +59,44 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
   const [editingCommentBody, setEditingCommentBody] = useState("");
   const [isDeletingCommentId, setIsDeletingCommentId] = useState<number | null>(null);
   const [isEditingCommentId, setIsEditingCommentId] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(issue.title);
+  const [editDescription, setEditDescription] = useState(issue.description ?? "");
+
+  const handleStartEdit = (): void => {
+    setEditTitle(issue.title);
+    setEditDescription(issue.description ?? "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = (): void => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async (): Promise<void> => {
+    if (!editTitle.trim()) {
+      toast.error("Issue title is required.");
+      return;
+    }
+
+    setIsEditing(false);
+
+    try {
+      router.refresh();
+      await updateIssue(issue.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim() || undefined,
+      });
+      toast.success("Issue updated");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to update issue.";
+      toast.error(message);
+      router.refresh();
+    }
+  };
 
   const handleAdvanceIssue = async (): Promise<void> => {
     setIsAdvancing(true);
@@ -148,6 +187,42 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
     }
   };
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size exceeds 10 MB limit.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("issueId", String(issue.id));
+      const res = await fetch("/api/uploads", { method: "POST", body: formData });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Upload failed.");
+      }
+      toast.success("File uploaded");
+      setFileInputKey((k) => k + 1);
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to upload file.";
+      toast.error(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   return (
     <section className="workflow-stack">
       {/* Back Navigation */}
@@ -159,8 +234,31 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
       <section className="card">
         <div className="card-header">
           <div>
-            <h1>{issue.title}</h1>
-            <p className="workflow-subtext">{issue.projectName}</p>
+            {isEditing ? (
+              <input
+                className="text-input"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                style={{ fontSize: "1.2rem", fontWeight: 650, width: "100%" }}
+              />
+            ) : (
+              <>
+                <h1>{issue.title}</h1>
+                <p className="workflow-subtext">{issue.projectName}</p>
+              </>
+            )}
+          </div>
+          <div className="card-controls">
+            {isEditing ? (
+              <div className="button-row">
+                <AppButton variant="ghost" onClick={handleCancelEdit}>Cancel</AppButton>
+                <AppButton onClick={() => void handleSaveEdit()}>Save</AppButton>
+              </div>
+            ) : (
+              <AppButton variant="ghost" onClick={handleStartEdit} startIcon={<FiEdit2 aria-hidden="true" />}>
+                Edit
+              </AppButton>
+            )}
           </div>
         </div>
 
@@ -197,12 +295,21 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
           </div>
 
           {/* Description */}
-          {issue.description && (
-            <div className="field-wrap workflow-span-all">
-              <label className="field-label">Description</label>
+          <div className="field-wrap workflow-span-all">
+            <label className="field-label">Description</label>
+            {isEditing ? (
+              <textarea
+                className="text-input"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={3}
+              />
+            ) : issue.description ? (
               <p>{issue.description}</p>
-            </div>
-          )}
+            ) : (
+              <p style={{ color: "var(--text-muted)" }}>No description.</p>
+            )}
+          </div>
 
           {/* Meta Info */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
@@ -345,6 +452,74 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
               Post Comment
             </AppButton>
           </div>
+        </div>
+      </section>
+
+      {/* Attachments Section */}
+      <section className="card">
+        <div className="card-header">
+          <div>
+            <h2>Attachments ({issue.attachments.length})</h2>
+          </div>
+        </div>
+
+        <div className="workflow-stack">
+          <div className="workflow-form">
+            <input
+              key={fileInputKey}
+              type="file"
+              id="issue-file-upload-input"
+              onChange={(e) => void handleUpload(e)}
+              disabled={isUploading}
+              style={{ display: "none" }}
+            />
+            <AppButton
+              onClick={() => document.getElementById("issue-file-upload-input")?.click()}
+              disabled={isUploading}
+              isLoading={isUploading}
+              loadingLabel="Uploading..."
+              startIcon={<FiPaperclip aria-hidden="true" />}
+            >
+              Attach File
+            </AppButton>
+            {isUploading && <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Uploading...</span>}
+          </div>
+
+          {issue.attachments.length === 0 ? (
+            <p className="empty-row">No attachments.</p>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">File</th>
+                    <th scope="col">Size</th>
+                    <th scope="col">Uploaded</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {issue.attachments.map((att) => (
+                    <tr key={att.id}>
+                      <td style={{ fontWeight: "500" }}>{att.fileName}</td>
+                      <td style={{ color: "var(--text-secondary)" }}>{formatFileSize(att.sizeBytes)}</td>
+                      <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(att.createdAt)}</td>
+                      <td>
+                        <a
+                          href={`/api/uploads/${att.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-link"
+                        >
+                          <span className="icon-with-label"><FiDownload /> Download</span>
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
     </section>

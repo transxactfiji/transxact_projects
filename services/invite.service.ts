@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import db, { ensureDbSchema } from "@/db/connection";
-import { invite, type UserRole, user } from "@/db/schema";
+import { auditLog, invite, type UserRole, type AuditLogAction, user } from "@/db/schema";
 import { createUnifiedEmailContent, sendEmail } from "./email.service";
 
 const INVITE_EXPIRY_HOURS = 72;
@@ -101,6 +101,22 @@ export async function createInvite(
     createdAt: nowIso,
     updatedAt: nowIso,
   });
+
+  // Audit log
+  const invitedUser = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, email))
+    .limit(1);
+  if (invitedUser[0]) {
+    await db.insert(auditLog).values({
+      adminUserId: input.invitedByUserId,
+      targetUserId: invitedUser[0].id,
+      action: "invited" as AuditLogAction,
+      metadata: JSON.stringify({ invitedEmail: email }),
+      createdAt: nowIso,
+    });
+  }
 
   const link = inviteLink(token);
   const content = createUnifiedEmailContent({

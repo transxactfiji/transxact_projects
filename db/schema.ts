@@ -87,6 +87,7 @@ export const task = sqliteTable("task", {
   createdAt: text().notNull(),
   updatedAt: text(),
   deletedAt: text(),
+  overdueNotifiedAt: text(),
 });
 
 export const action = sqliteTable("action", {
@@ -418,14 +419,18 @@ export const workItemAttachment = sqliteTable("work_item_attachment", {
   deletedAt: text(),
 });
 
-export const auditEvent = sqliteTable("audit_event", {
+export const userSession = sqliteTable("user_session", {
   id: int().primaryKey({ autoIncrement: true }),
-  actorUserId: int().references(() => user.id),
-  entityType: text().notNull(),
-  entityId: int(),
-  action: text().notNull(),
-  metadata: text(),
+  userId: int()
+    .notNull()
+    .references(() => user.id),
+  token: text().notNull(),
+  deviceLabel: text().notNull(),
+  ipAddress: text(),
   createdAt: text().notNull(),
+  lastUsedAt: text().notNull(),
+  expiresAt: text().notNull(),
+  isActive: int().notNull().default(1),
 });
 
 export type AuditLogAction =

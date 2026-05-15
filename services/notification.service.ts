@@ -10,6 +10,9 @@ import {
   notificationDeliveryLog,
   notificationEmailQueue,
   notificationPreference,
+  phase,
+  project,
+  task,
   type NotificationCategory,
   type NotificationSourceType,
   type SubscribableEntityType,
@@ -896,4 +899,92 @@ export async function resolveEntityNotificationRecipients(
 
   recipients.delete(input.actorUserId);
   return [...recipients];
+}
+
+export async function notifyOverdueTasks(): Promise<number> {
+  await ensureDbSchema();
+
+  const nowIso = new Date().toISOString();
+  const overdueTasks = await db
+    .select({
+      id: task.id,
+      title: task.title,
+      assigneeUserId: task.assigneeUserId,
+      createdByUserId: task.createdByUserId,
+      projectName: project.name,
+    })
+    .from(task)
+    .innerJoin(phase, eq(task.phaseId, phase.id))
+    .innerJoin(project, eq(phase.projectId, project.id))
+    .where(
+      and(
+        sql`${task.dueAt} <= ${nowIso}`,
+        sql`${task.status} != 'completed'`,
+        isNull(task.deletedAt),
+        isNull(task.overdueNotifiedAt),
+      ),
+    )
+    .limit(50);
+
+  if (overdueTasks.length === 0) {
+    return 0;
+  }
+
+  const taskIds = overdueTasks.map((t) => t.id);
+  const subscriptions = await db
+    .select({
+      taskId: entitySubscription.entityId,
+      userId: entitySubscription.userId,
+    })
+    .from(entitySubscription)
+    .where(
+      and(
+        eq(entitySubscription.entityType, "task"),
+        inArray(entitySubscription.entityId, taskIds),
+      ),
+    );
+
+  const subscribersByTaskId = new Map<number, Set<number>>();
+  for (const sub of subscriptions) {
+    if (!subscribersByTaskId.has(sub.taskId)) {
+      subscribersByTaskId.set(sub.taskId, new Set());
+    }
+    subscribersByTaskId.get(sub.taskId)!.add(sub.userId);
+  }
+
+  let notifiedCount = 0;
+
+  for (const t of overdueTasks) {
+    const recipientIds = new Set<number>();
+    if (t.assigneeUserId) recipientIds.add(t.assigneeUserId);
+    if (t.createdByUserId) recipientIds.add(t.createdByUserId);
+    const subscribers = subscribersByTaskId.get(t.id);
+    if (subscribers) {
+      for (const sid of subscribers) {
+        recipientIds.add(sid);
+      }
+    }
+
+    if (recipientIds.size > 0) {
+      await createNotifications({
+        recipientUserIds: [...recipientIds],
+        category: "task_activity",
+        type: "task_overdue",
+        title: `Task overdue: ${t.title}`,
+        body: `This task in ${t.projectName} was due and is now overdue.`,
+        href: `/tasks?taskId=${t.id}`,
+        sourceType: "task",
+        sourceId: t.id,
+        emailDelayMinutes: 0,
+      });
+      notifiedCount++;
+    }
+
+    await db
+      .update(task)
+      .set({ overdueNotifiedAt: nowIso })
+      .where(eq(task.id, t.id));
+  }
+
+  return notifiedCount;
 }

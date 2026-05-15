@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import { toast } from "sonner";
-import { FiArchive, FiEye, FiEyeOff, FiPlus } from "react-icons/fi";
+import { FiArchive, FiEdit2, FiEye, FiEyeOff, FiPlus } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import Modal from "@/app/ui/modal";
@@ -14,6 +14,7 @@ import {
   archiveProject,
   createProject,
   setProjectFollow,
+  updateProject,
   type ProjectWorkflowItem,
 } from "@/services/workflow.service";
 
@@ -58,6 +59,9 @@ export default function ProjectsWorkflowView({
   const [isCreating, setIsCreating] = useState(false);
   const [isArchivingId, setIsArchivingId] = useState<number | null>(null);
   const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(null);
+  const [isEditingId, setIsEditingId] = useState<number | null>(null);
+  const [editProjectName, setEditProjectName] = useState("");
+  const [isSavingEditId, setIsSavingEditId] = useState<number | null>(null);
   const [status, setStatus] = useState<FormStatus | null>(null);
 
   const summary = useMemo(() => {
@@ -138,6 +142,38 @@ export default function ProjectsWorkflowView({
     }
   };
 
+  const handleStartEditProject = (item: ProjectWorkflowItem): void => {
+    setEditProjectName(item.name);
+    setIsEditingId(item.id);
+  };
+
+  const handleCancelEditProject = (): void => {
+    setIsEditingId(null);
+    setEditProjectName("");
+  };
+
+  const handleSaveEditProject = async (projectId: number): Promise<void> => {
+    if (!editProjectName.trim()) {
+      toast.error("Project name is required.");
+      return;
+    }
+
+    setIsSavingEditId(projectId);
+    try {
+      await updateProject(projectId, editProjectName.trim());
+      setIsEditingId(null);
+      setEditProjectName("");
+      toast.success("Project renamed");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to rename project.";
+      setStatus({ tone: "error", message });
+      toast.error(message);
+    } finally {
+      setIsSavingEditId(null);
+    }
+  };
+
   return (
     <section className="workflow-stack">
       <div className="kpi-grid">
@@ -195,7 +231,46 @@ export default function ProjectsWorkflowView({
               ) : (
                 projects.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.name}</td>
+                    <td>
+                      {isEditingId === item.id ? (
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <input
+                            className="text-input"
+                            value={editProjectName}
+                            onChange={(e) => setEditProjectName(e.target.value)}
+                            disabled={isSavingEditId === item.id}
+                            style={{ width: "200px" }}
+                          />
+                          <AppButton
+                            variant="ghost"
+                            onClick={() => void handleSaveEditProject(item.id)}
+                            disabled={isSavingEditId === item.id}
+                            isLoading={isSavingEditId === item.id}
+                            loadingLabel="Saving..."
+                          >
+                            Save
+                          </AppButton>
+                          <AppButton
+                            variant="ghost"
+                            onClick={handleCancelEditProject}
+                            disabled={isSavingEditId === item.id}
+                          >
+                            Cancel
+                          </AppButton>
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <span>{item.name}</span>
+                          <button
+                            onClick={() => handleStartEditProject(item)}
+                            className="text-link-button"
+                            title="Rename"
+                          >
+                            <FiEdit2 size={13} />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                     <td>{item.taskCount}</td>
                     <td>{item.openIssueCount}</td>
                     <td>{formatDate(item.createdAt)}</td>

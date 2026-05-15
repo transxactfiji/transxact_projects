@@ -1,8 +1,9 @@
+import crypto from "node:crypto";
 import db, { ensureDbSchema } from "@/db/connection";
-import { type UserRole, type UserStatus, user } from "@/db/schema";
+import { type UserRole, type UserStatus, user, userSession } from "@/db/schema";
 import { getCookie } from "./cookies.service";
 import { verifyJWT } from "./jwt.service";
-import { eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 
 const AUTH_COOKIE_NAME = "transxact_project_auth_token";
 
@@ -18,6 +19,26 @@ async function getSessionUserByToken(token: string): Promise<SessionUser> {
   await ensureDbSchema();
 
   const payload = verifyJWT(token);
+
+  // Validate session exists and is active
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const nowIso = new Date().toISOString();
+  const session = await db
+    .select({ id: userSession.id })
+    .from(userSession)
+    .where(
+      and(
+        eq(userSession.token, tokenHash),
+        eq(userSession.isActive, 1),
+        gt(userSession.expiresAt, nowIso),
+      ),
+    )
+    .limit(1);
+
+  if (session.length === 0) {
+    throw new Error("Session expired. Please sign in again.");
+  }
+
   const rows = await db
     .select({
       id: user.id,
