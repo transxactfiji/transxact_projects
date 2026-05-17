@@ -3,6 +3,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { ReactElement } from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type ThemeMode = "light" | "dark";
 
@@ -13,6 +15,11 @@ const themeSubscribers = new Set<() => void>();
 function applyTheme(theme: ThemeMode): void {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 }
 
 function readStoredTheme(): ThemeMode {
@@ -69,14 +76,21 @@ export default function ThemeToggle(): ReactElement {
   };
 
   return (
-    <button
-      type="button"
-      className="theme-toggle"
-      onClick={handleToggle}
-      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-      title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-    >
-      {theme === "light" ? <FiMoon size={15} aria-hidden="true" /> : <FiSun size={15} aria-hidden="true" />}
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="bg-accent text-muted-foreground hover:text-foreground"
+          onClick={handleToggle}
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
+          {theme === "light" ? <FiMoon size={15} aria-hidden="true" /> : <FiSun size={15} aria-hidden="true" />}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        Switch to {theme === "light" ? "dark" : "light"} mode
+      </TooltipContent>
+    </Tooltip>
   );
 }

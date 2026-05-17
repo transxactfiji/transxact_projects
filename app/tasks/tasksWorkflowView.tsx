@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiArrowLeft, FiCheckSquare, FiEye, FiEyeOff, FiMessageCircle, FiMessageSquare, FiPlus, FiSearch } from "react-icons/fi";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
@@ -212,55 +213,67 @@ export default function TasksWorkflowView({
       : null;
 
     return (
-      <div key={item.id} className="kanban-card">
-        <Link href={`/tasks/${item.id}`} className="kanban-card-title" style={{ textDecoration: "none" }}>
+      <div key={item.id} className="kanban-card border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm">
+        <Link href={`/tasks/${item.id}`} className="kanban-card-title font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline">
           {item.title}
         </Link>
         {item.description ? (
-          <div className="kanban-card-desc">{item.description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
         ) : null}
-        <div className="kanban-card-meta">
-          <span className="kanban-card-meta-item">{item.projectName}</span>
-          <span className="kanban-card-meta-item">{item.phaseName}</span>
-          <span className="kanban-card-meta-item">{item.assigneeName ?? "Unassigned"}</span>
-          <span className={`kanban-card-meta-item${isOverdue(item.dueAt) ? " is-overdue" : ""}`}>Due {formatDueDate(item.dueAt)}</span>
+        <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.projectName}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.phaseName}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
+          <span className={`inline-flex items-center gap-1 text-xs ${isOverdue(item.dueAt) ? "text-destructive" : "text-muted-foreground"}`}>Due {formatDueDate(item.dueAt)}</span>
         </div>
-        <div className="kanban-card-footer">
-          <div className="button-row">
-            <button
-              onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
-              disabled={isTogglingFollowId === item.id}
-              className="slack-action-btn"
-              title={item.isFollowing ? "Unfollow" : "Follow"}
-            >
-              {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-            </button>
-            <button
-              onClick={() => {
-                setCommentTaskId(item.id);
-                setCommentTaskTitle(item.title);
-              }}
-              className="slack-action-btn"
-              title="Comments"
-            >
-              {item.unreadCommentCount > 0 ? (
-                <FiMessageCircle size={14} color="var(--brand)" />
-              ) : (
-                <FiMessageSquare size={14} />
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setActionTaskId(item.id);
-                setActionTaskTitle(item.title);
-              }}
-              className="slack-action-btn"
-              title="Actions"
-            >
-              <FiCheckSquare size={14} />
-            </button>
+        <div className="flex items-center justify-between gap-1 mt-0.5 pt-0.5 border-t">
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
+                  disabled={isTogglingFollowId === item.id}
+                  className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{item.isFollowing ? "Unfollow" : "Follow"}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    setCommentTaskId(item.id);
+                    setCommentTaskTitle(item.title);
+                  }}
+                  className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  {item.unreadCommentCount > 0 ? (
+                    <FiMessageCircle size={14} className="text-primary" />
+                  ) : (
+                    <FiMessageSquare size={14} />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Comments</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => {
+                    setActionTaskId(item.id);
+                    setActionTaskTitle(item.title);
+                  }}
+                  className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <FiCheckSquare size={14} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Actions</TooltipContent>
+            </Tooltip>
           </div>
-          <div className="button-row">
+          <div className="flex items-center gap-1.5">
             {canGoBack && (
               <AppButton
                 onClick={() => handleReverseTask(item.id)}
@@ -293,11 +306,11 @@ export default function TasksWorkflowView({
   const clearFiltersActive = searchQuery || filterProjectId || filterAssigneeId || filterOverdue;
 
   return (
-    <section className="workflow-stack">
-      <section className="card">
-        <div className="card-header">
+    <section className="flex flex-col gap-2 min-h-0">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <h2>Task workflow board</h2>
-          <div className="card-controls">
+          <div className="flex items-center gap-1.5">
             <AppButton
               onClick={() => setIsModalOpen(true)}
               disabled={!hasProject}
@@ -316,31 +329,30 @@ export default function TasksWorkflowView({
         )}
 
         {tasks.length === 0 && hasProject ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">
+          <div className="flex flex-col items-center gap-1.5 py-6 px-3 text-muted-foreground text-sm text-center">
+            <div className="text-muted-foreground">
               <FiCheckSquare size={32} aria-hidden="true" />
             </div>
-            <p className="empty-state-title">No tasks yet</p>
+            <p className="font-semibold">No tasks yet</p>
             <p>Create your first task to start tracking work.</p>
           </div>
         ) : (
           <>
-            <div className="kanban-filter-bar">
-              <div className="combobox-wrap" style={{ flex: 1, minWidth: "10rem", position: "relative" }}>
+            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+              <div className="flex-1 min-w-40 relative">
                 <FiSearch
                   size={16}
-                  style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none", zIndex: 1 }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
                 />
                 <input
-                  className="text-input"
-                  style={{ paddingLeft: "2rem" }}
+                  className="w-full border rounded-md bg-accent text-foreground text-sm pl-8 pr-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tasks..."
                 />
               </div>
               <select
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
                 value={filterProjectId}
                 onChange={(e) => setFilterProjectId(e.target.value)}
                 aria-label="Filter by project"
@@ -351,7 +363,7 @@ export default function TasksWorkflowView({
                 ))}
               </select>
               <select
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
                 value={filterAssigneeId}
                 onChange={(e) => setFilterAssigneeId(e.target.value)}
                 aria-label="Filter by assignee"
@@ -361,16 +373,20 @@ export default function TasksWorkflowView({
                   <option key={a.id} value={a.id}>{a.label}</option>
                 ))}
               </select>
-              <button
-                type="button"
-                className={cx("sort-button", filterOverdue && "is-active")}
-                onClick={() => setFilterOverdue((v) => !v)}
-                title="Show only overdue tasks"
-              >
-                <span style={{ fontSize: "0.75rem" }}>
-                  {filterOverdue ? "Overdue ✓" : "Overdue"}
-                </span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className={`inline-flex items-center justify-center gap-1 border rounded-md bg-accent text-muted-foreground cursor-pointer text-sm font-semibold min-h-7 px-2 py-1.5 transition-colors hover:border-border hover:text-foreground${filterOverdue ? " bg-primary/10 border-primary text-primary" : ""}`}
+                    onClick={() => setFilterOverdue((v) => !v)}
+                  >
+                    <span className="text-xs">
+                      {filterOverdue ? "Overdue ✓" : "Overdue"}
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Show only overdue tasks</TooltipContent>
+              </Tooltip>
               {clearFiltersActive && (
                 <AppButton
                   variant="ghost"
@@ -384,42 +400,42 @@ export default function TasksWorkflowView({
                   Clear
                 </AppButton>
               )}
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
                 {filteredTasks.length} of {tasks.length}
               </span>
             </div>
 
-            <div className="kanban-board">
-              <div className="kanban-col is-new">
-                <div className="kanban-col-header">
-                  <span className="kanban-col-title">Not Started</span>
-                  <span className="kanban-col-count">{taskCounts.notStarted}</span>
+            <div className="flex gap-2 overflow-x-auto pb-0.5 flex-1 min-h-0 w-full">
+              <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-blue-50 dark:bg-blue-950/30">
+                <div className="flex items-center gap-1 px-0.5">
+                  <span className="font-semibold text-sm">Not Started</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.notStarted}</span>
                 </div>
-                <div className="kanban-card-list">
+                <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                   {filteredTasks.filter((t) => t.status === "not_started").map(kanbanCard)}
-                  {taskCounts.notStarted === 0 && <p className="kanban-empty-col">No tasks</p>}
+                  {taskCounts.notStarted === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
                 </div>
               </div>
 
-              <div className="kanban-col is-active">
-                <div className="kanban-col-header">
-                  <span className="kanban-col-title">In Progress</span>
-                  <span className="kanban-col-count">{taskCounts.inProgress}</span>
+              <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-amber-50 dark:bg-amber-950/30">
+                <div className="flex items-center gap-1 px-0.5">
+                  <span className="font-semibold text-sm">In Progress</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.inProgress}</span>
                 </div>
-                <div className="kanban-card-list">
+                <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                   {filteredTasks.filter((t) => t.status === "in_progress").map(kanbanCard)}
-                  {taskCounts.inProgress === 0 && <p className="kanban-empty-col">No tasks</p>}
+                  {taskCounts.inProgress === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
                 </div>
               </div>
 
-              <div className="kanban-col is-done">
-                <div className="kanban-col-header">
-                  <span className="kanban-col-title">Completed</span>
-                  <span className="kanban-col-count">{taskCounts.completed}</span>
+              <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-emerald-50 dark:bg-emerald-950/30">
+                <div className="flex items-center gap-1 px-0.5">
+                  <span className="font-semibold text-sm">Completed</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.completed}</span>
                 </div>
-                <div className="kanban-card-list">
+                <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                   {filteredTasks.filter((t) => t.status === "completed").map(kanbanCard)}
-                  {taskCounts.completed === 0 && <p className="kanban-empty-col">No tasks</p>}
+                  {taskCounts.completed === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
                 </div>
               </div>
             </div>
@@ -435,12 +451,12 @@ export default function TasksWorkflowView({
         }}
         title="Create task"
       >
-        <div className="workflow-form-grid">
-          <div className="field-wrap">
-            <label htmlFor="task-project" className="field-label">Project</label>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="task-project" className="text-sm font-semibold text-muted-foreground">Project</label>
             <select
               id="task-project"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={projectId}
               onChange={(event) => setProjectId(event.target.value)}
               disabled={isSubmitting}
@@ -451,11 +467,11 @@ export default function TasksWorkflowView({
             </select>
           </div>
 
-          <div className="field-wrap">
-            <label htmlFor="task-assignee" className="field-label">Assignee</label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="task-assignee" className="text-sm font-semibold text-muted-foreground">Assignee</label>
             <select
               id="task-assignee"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={assigneeUserId}
               onChange={(event) => setAssigneeUserId(event.target.value)}
               disabled={isSubmitting}
@@ -479,12 +495,12 @@ export default function TasksWorkflowView({
             required
           />
 
-          <div className="field-wrap">
-            <label htmlFor="task-due-on" className="field-label">Due date</label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="task-due-on" className="text-sm font-semibold text-muted-foreground">Due date</label>
             <input
               id="task-due-on"
               type="date"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={dueOn}
               onChange={(event) => setDueOn(event.target.value)}
               disabled={isSubmitting}
@@ -492,11 +508,11 @@ export default function TasksWorkflowView({
             />
           </div>
 
-          <div className="field-wrap workflow-span-all">
-            <label htmlFor="task-description" className="field-label">Description</label>
+          <div className="flex flex-col gap-1 col-span-2">
+            <label htmlFor="task-description" className="text-sm font-semibold text-muted-foreground">Description</label>
             <textarea
               id="task-description"
-              className="text-input workflow-textarea"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-16 resize-y"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Optional implementation detail and acceptance notes."
@@ -505,7 +521,7 @@ export default function TasksWorkflowView({
           </div>
         </div>
 
-        <div className="workflow-actions">
+        <div className="flex items-center gap-2">
           <AppButton
             onClick={handleCreateTask}
             disabled={!hasProject}
@@ -547,8 +563,4 @@ export default function TasksWorkflowView({
       )}
     </section>
   );
-}
-
-function cx(...classNames: Array<string | false | null | undefined>): string {
-  return classNames.filter(Boolean).join(" ");
 }

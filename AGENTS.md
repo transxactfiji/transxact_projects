@@ -26,6 +26,7 @@ No separate `tsc` command – `next build` includes type-checking. No test frame
 ## Architecture
 
 - **Framework**: Next.js 16 App Router, React 19, Tailwind CSS v4, Drizzle ORM + libsql/SQLite
+- **UI**: shadcn/ui (new-york style) components under `components/ui/` with `cn()` utility from `@/lib/utils`. Lucide icons for new components, react-icons `fi` for existing code.
 - **Auth**: Email-based magic link (code sent to user email). JWT stored in cookie `transxact_project_auth_token`. Middleware (`proxy.ts`, exported as `proxy`) redirects unauthenticated users away from all non-API routes.
 - **Layout**: Root layout wraps all routes in `AppFrame` (sidebar + topbar). Admin pages render inside this frame – do NOT add standalone wrappers like `min-h-screen` or outer `max-w-*` containers.
 - **API**: Standard Next.js route handlers under `app/api/`. Auth via `getAdminUserIdFromRequest(request)` (admin routes) or `requireSessionUser()` (general routes) from `services/`.
@@ -34,39 +35,30 @@ No separate `tsc` command – `next build` includes type-checking. No test frame
 
 ## Design system
 
-Use CSS custom properties from `globals.css` over hardcoded Tailwind colors (dark mode via `data-theme="dark"` on `<html>`):
+Two CSS variable layers coexist in `globals.css`:
+1. **shadcn/ui variables** (oklch) – `--background`, `--foreground`, `--primary`, `--muted`, `--border`, `--ring`, `--destructive`, etc. Used by shadcn components.
+2. **Legacy project variables** (hex) – `--brand`, `--success`, `--error`, `--surface`, `--text-primary`, etc. Used by custom CSS classes.
 
-| Token | Purpose |
-|---|---|
-| `var(--text-primary)` | Primary text (was `text-gray-900`) |
-| `var(--text-secondary)` | Secondary text (was `text-gray-600`) |
-| `var(--text-muted)` | Muted text (was `text-gray-500`) |
-| `var(--surface)` | Card/container bg (was `bg-white`) |
-| `var(--surface-muted)` | Subtle bg (was `bg-gray-50`) |
-| `var(--surface-contrast)` | Hover bg (was `bg-gray-200`) |
-| `var(--border)` | Borders (was `border-gray-200`) |
-| `var(--brand)` | Primary accent (was `bg-blue-600`) |
-| `var(--brand-hover)` | Primary hover (was `hover:bg-blue-700`) |
-| `var(--success)` / `var(--success-soft)` | Active/green badges |
-| `var(--error)` / `var(--error-soft)` | Inactive/red badges |
-| `var(--info)` / `var(--info-soft)` | Pending/info badges |
+Dark mode via `data-theme="dark"` AND `.dark` class on `<html>` (both selectors in CSS).
 
-### Shared CSS classes (prefer over custom Tailwind)
-- `card` / `card-header` / `card-controls` – content containers
-- `data-table` / `table-wrap` – tables. Use `scope="col"` on `<th>`.
+### Shared CSS classes (legacy, prefer shadcn equivalents where possible)
+- `card` / `card-header` / `card-controls` – content containers (shadcn alternative: `<Card>`)
+- `data-table` / `table-wrap` – tables (shadcn alternative: `<Table>`)
 - `workflow-stack` / `workflow-form` – page/section layout
-- `form-stack` / `field-wrap` / `field-label` / `text-input` / `field-note` – forms
+- `form-stack` / `field-wrap` / `field-label` / `text-input` / `field-note` – forms (shadcn alternative: `<Input>`, `<Label>`)
 - `filter-input` – search/select inputs
-- `app-button is-primary` / `is-secondary` / `is-ghost` – buttons
 - `text-link` / `icon-with-label` / `button-row` – links and action groups
-- `workflow-status-pill` – role/status badges
-- Use `cx(...classNames)` utility from `@/app/ui/cx` for conditional classes
+- `workflow-status-pill` – role/status badges (shadcn alternative: `<Badge>`)
+- Use `cn(...classNames)` from `@/lib/utils` for conditional classes (replaces `cx()`)
 
 ### Reusable components
-- `AppButton` (variant, startIcon, endIcon, isLoading, loadingLabel, fullWidth) – `@/app/ui/appButton`
-- `TextField` (label, id, hint, error) – `@/app/ui/textField`
-- `InlineStatus` (tone: success|error|info, message) – `@/app/ui/inlineStatus`
-- `cx()` – `@/app/ui/cx`
+- `AppButton` (variant, startIcon, endIcon, isLoading, loadingLabel, fullWidth) – `@/app/ui/appButton` (wraps shadcn `<Button>`)
+- `TextField` (label, id, hint, error) – `@/app/ui/textField` (wraps shadcn `<Input>` + `<Label>`)
+- `InlineStatus` (tone: success|error|info, message) – `@/app/ui/inlineStatus` (wraps shadcn `<Alert>`)
+- `Modal` – `@/app/ui/modal` (wraps shadcn `<Dialog>`)
+- `Loading` / `Spinner` – `@/app/ui/loading` (uses lucide `<Loader2>`)
+- shadcn primitives: `<Button>`, `<Input>`, `<Label>`, `<Alert>`, `<Dialog>`, `<Badge>`, `<Skeleton>`, `<Separator>` – `@/components/ui/*`
+- `cn()` – `@/lib/utils`
 
 ## Migrations
 

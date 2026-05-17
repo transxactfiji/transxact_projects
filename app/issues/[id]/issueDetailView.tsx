@@ -7,6 +7,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye, FiPaperclip, FiDownload } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import { formatDateTime } from "@/lib/utils";
 import {
@@ -216,33 +217,30 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
   }
 
   return (
-    <section className="workflow-stack">
-      {/* Back Navigation */}
-      <Link href="/issues" className="text-link" style={{ marginBottom: 0 }}>
-        <span className="icon-with-label"><FiArrowLeft /> Back</span>
+    <section className="flex flex-col gap-2 min-h-0">
+      <Link href="/issues" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
+        <span className="inline-flex items-center gap-1"><FiArrowLeft /> Back</span>
       </Link>
 
-      {/* Main Content */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             {isEditing ? (
               <input
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground text-lg font-semibold"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                style={{ fontSize: "1.2rem", fontWeight: 650, width: "100%" }}
               />
             ) : (
               <>
                 <h1>{issue.title}</h1>
-                <p className="workflow-subtext">{issue.projectName}</p>
+                <p className="mt-1 text-muted-foreground text-xs">{issue.projectName}</p>
               </>
             )}
           </div>
-          <div className="card-controls">
+          <div className="flex items-center gap-1.5">
             {isEditing ? (
-              <div className="button-row">
+              <div className="flex items-center gap-1.5">
                 <AppButton variant="ghost" onClick={handleCancelEdit}>Cancel</AppButton>
                 <AppButton onClick={() => void handleSaveEdit()}>Save</AppButton>
               </div>
@@ -254,34 +252,33 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
-          <div className="field-wrap">
-            <label className="field-label">Status</label>
-            <p style={{ fontWeight: "500" }}>{issueStatusLabel(issue.status)}</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Status</label>
+            <p className="font-medium">{issueStatusLabel(issue.status)}</p>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Assignee</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Assignee</label>
             <p>{issue.assigneeName ?? "Unassigned"}</p>
           </div>
 
           {issue.taskId && (
-            <div className="field-wrap">
-              <label className="field-label">Related Task</label>
-              <Link href={`/tasks/${issue.taskId}`} className="text-link">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Related Task</label>
+              <Link href={`/tasks/${issue.taskId}`} className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
                 {issue.taskTitle}
               </Link>
             </div>
           )}
 
           <div
-            className="field-wrap"
-            style={{ gridColumn: "1 / -1" }}
+            className="flex flex-col gap-1 col-span-3"
           >
-            <label className="field-label">Description</label>
+            <label className="text-sm font-semibold text-muted-foreground">Description</label>
             {isEditing ? (
               <textarea
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 rows={3}
@@ -289,33 +286,33 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
             ) : issue.description ? (
               <p>{issue.description}</p>
             ) : (
-              <p style={{ color: "var(--text-muted)" }}>No description.</p>
+              <p className="text-muted-foreground">No description.</p>
             )}
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Created</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Created</label>
             <p>
               {formatDateTime(issue.createdAt)} by <strong>{issue.createdByUserName}</strong>
             </p>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Progress</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Progress</label>
             <AppButton
               onClick={() => void handleAdvanceIssue()}
               disabled={issue.status === "closed" || isAdvancing}
               isLoading={isAdvancing}
               loadingLabel="Updating..."
               variant="ghost"
-              style={{ alignSelf: "start" }}
+              className="self-start"
             >
               Next Step
             </AppButton>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Follow</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Follow</label>
             <AppButton
               onClick={() => void handleToggleFollow()}
               disabled={isTogglingFollow}
@@ -323,7 +320,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
               loadingLabel={isFollowing ? "Unfollowing..." : "Following..."}
               startIcon={isFollowing ? <FiHeart aria-hidden="true" /> : <FiEye aria-hidden="true" />}
               variant="ghost"
-              style={{ alignSelf: "start" }}
+              className="self-start"
             >
               {isFollowing ? "Following" : "Follow"}
             </AppButton>
@@ -331,35 +328,32 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
         </div>
       </section>
 
-      {/* Comments Section */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Comments ({issue.comments.length})</h2>
           </div>
         </div>
 
-        <div className="workflow-stack">
-          {/* Comment Thread */}
-          <div className="messages-thread">
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex flex-col gap-1.5 mb-2 max-h-96 overflow-auto">
             {issue.comments.length === 0 ? (
-              <p className="empty-row">No comments yet.</p>
+              <p className="text-muted-foreground text-center">No comments yet.</p>
             ) : (
               issue.comments.map((comment) => (
                 <article
                   key={comment.id}
-                  className={`message-bubble ${comment.isOwn ? "is-own" : ""}`}
+                  className={`border rounded-md bg-accent p-2 ${comment.isOwn ? "border-border" : ""}`}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                    <div style={{ flex: 1 }}>
-                      <p className="message-meta">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="text-muted-foreground text-xs mb-0.5">
                         <strong>{comment.authorLabel}</strong> · {formatDateTime(comment.createdAt)}
                         {comment.isEdited ? " · edited" : ""}
                       </p>
                       {editingCommentId === comment.id ? (
                         <textarea
-                          className="text-input"
-                          style={{ marginTop: "0.5rem" }}
+                          className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground mt-2"
                           value={editingCommentBody}
                           onChange={(e) => setEditingCommentBody(e.target.value)}
                           disabled={isEditingCommentId === comment.id}
@@ -369,7 +363,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
                       )}
                     </div>
                     {comment.isOwn && (
-                      <div className="workflow-actions" style={{ marginLeft: "1rem" }}>
+                      <div className="flex items-center gap-2 ml-4">
                         {editingCommentId === comment.id ? (
                           <>
                             <AppButton
@@ -394,23 +388,30 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
                           </>
                         ) : (
                           <>
-                            <button
-                              onClick={() => handleEditComment(comment.id, comment.body)}
-                              disabled={isDeletingCommentId === comment.id}
-                              className="text-link-button"
-                              title="Edit comment"
-                            >
-                              <FiEdit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => void handleDeleteComment(comment.id)}
-                              disabled={isDeletingCommentId === comment.id}
-                              className="text-link-button"
-                              style={{ color: "var(--error)" }}
-                              title="Delete comment"
-                            >
-                              <FiTrash2 size={16} />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleEditComment(comment.id, comment.body)}
+                                  disabled={isDeletingCommentId === comment.id}
+                                  className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
+                                >
+                                  <FiEdit2 size={16} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit comment</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => void handleDeleteComment(comment.id)}
+                                  disabled={isDeletingCommentId === comment.id}
+                                  className="inline-flex items-center gap-1 border-0 bg-transparent text-destructive cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-destructive/80"
+                                >
+                                  <FiTrash2 size={16} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete comment</TooltipContent>
+                            </Tooltip>
                           </>
                         )}
                       </div>
@@ -421,15 +422,14 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
             )}
           </div>
 
-          {/* Add Comment Form */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label htmlFor="comment-input" className="field-label">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="comment-input" className="text-sm font-semibold text-muted-foreground">
               Add Comment
             </label>
-            <div style={{ display: "flex", alignItems: "end", gap: "0.35rem" }}>
+            <div className="flex items-end gap-1">
               <textarea
                 id="comment-input"
-                className="text-input workflow-textarea"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-16 resize-y"
                 value={commentDraft}
                 onChange={(e) => setCommentDraft(e.target.value)}
                 disabled={isAddingComment}
@@ -448,23 +448,22 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
         </div>
       </section>
 
-      {/* Attachments Section */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Attachments ({issue.attachments.length})</h2>
           </div>
         </div>
 
-        <div className="workflow-stack">
-          <div className="workflow-form">
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex items-end gap-2 mb-2">
             <input
               key={fileInputKey}
               type="file"
               id="issue-file-upload-input"
               onChange={(e) => void handleUpload(e)}
               disabled={isUploading}
-              style={{ display: "none" }}
+              className="hidden"
             />
             <AppButton
               onClick={() => document.getElementById("issue-file-upload-input")?.click()}
@@ -475,36 +474,36 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
             >
               Attach File
             </AppButton>
-            {isUploading && <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Uploading...</span>}
+            {isUploading && <span className="text-muted-foreground text-sm">Uploading...</span>}
           </div>
 
           {issue.attachments.length === 0 ? (
-            <p className="empty-row">No attachments.</p>
+            <p className="text-muted-foreground text-center">No attachments.</p>
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
+            <div className="max-h-64 overflow-auto border rounded-md">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th scope="col">File</th>
-                    <th scope="col">Size</th>
-                    <th scope="col">Uploaded</th>
-                    <th scope="col"></th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">File</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Size</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Uploaded</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {issue.attachments.map((att) => (
-                    <tr key={att.id}>
-                      <td style={{ fontWeight: "500" }}>{att.fileName}</td>
-                      <td style={{ color: "var(--text-secondary)" }}>{formatFileSize(att.sizeBytes)}</td>
-                      <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(att.createdAt)}</td>
-                      <td>
+                    <tr key={att.id} className="transition-colors hover:bg-accent">
+                      <td className="border-b px-2 py-1.5 text-left font-medium">{att.fileName}</td>
+                      <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatFileSize(att.sizeBytes)}</td>
+                      <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatDateTime(att.createdAt)}</td>
+                      <td className="border-b px-2 py-1.5 text-left">
                         <a
                           href={`/api/uploads/${att.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-link"
+                          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80"
                         >
-                          <span className="icon-with-label"><FiDownload /> Download</span>
+                          <span className="inline-flex items-center gap-1"><FiDownload /> Download</span>
                         </a>
                       </td>
                     </tr>

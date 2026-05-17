@@ -112,9 +112,9 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <section className="workflow-stack">
-        <div className="card" style={{ textAlign: "center", padding: "3rem 1rem" }}>
-          <p className="empty-row">Could not load profile.</p>
+      <section className="flex flex-col gap-2 min-h-0">
+        <div className="rounded-lg border bg-card shadow-card text-center py-12 px-4">
+          <p className="text-muted-foreground text-center">Could not load profile.</p>
         </div>
       </section>
     );
@@ -123,16 +123,16 @@ export default function ProfilePage() {
   const hasChanges = name.trim() !== (profile.name ?? "");
 
   return (
-    <section className="workflow-stack">
-      <div className="card">
-        <div className="card-header">
-          <h2 className="icon-with-label">
+    <section className="flex flex-col gap-2 min-h-0">
+      <div className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
+          <h2 className="inline-flex items-center gap-1">
             <FiUser aria-hidden="true" />
             <span>Profile</span>
           </h2>
         </div>
 
-        <div className="form-stack" style={{ marginTop: 0 }}>
+        <div className="mt-0 flex flex-col gap-2">
           <TextField
             id="name"
             label="Name"
@@ -146,40 +146,35 @@ export default function ProfilePage() {
             required
           />
 
-          <div className="field-wrap">
-            <label className="field-label">Email</label>
-            <div className="readonly-field">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Email</label>
+            <div className="flex items-center px-2.5 py-1.5 border rounded-md bg-accent text-muted-foreground text-sm min-h-8">
               <span>{profile.email}</span>
             </div>
-            <p className="field-note">Email cannot be changed.</p>
+            <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <div className="field-wrap">
-              <label className="field-label">Member since</label>
-              <div className="readonly-field">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Member since</label>
+              <div className="flex items-center px-2.5 py-1.5 border rounded-md bg-accent text-muted-foreground text-sm min-h-8">
                 {new Date(profile.createdAt).toLocaleDateString()}
               </div>
             </div>
-            <div className="field-wrap">
-              <label className="field-label">Last login</label>
-              <div className="readonly-field">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Last login</label>
+              <div className="flex items-center px-2.5 py-1.5 border rounded-md bg-accent text-muted-foreground text-sm min-h-8">
                 {profile.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleDateString() : "N/A"}
               </div>
             </div>
           </div>
 
-          <div className="button-row" style={{ paddingTop: "0.5rem" }}>
-            <span className="workflow-status-pill" style={{ background: "var(--brand-soft)", color: "var(--brand)", border: "none" }}>
+          <div className="flex items-center gap-1.5 pt-2">
+            <span className="inline-flex items-center rounded-full text-xs font-semibold px-1.5 py-0.5 bg-primary/10 text-primary">
               {profile.role}
             </span>
             <span
-              className="workflow-status-pill"
-              style={{
-                background: profile.status === "active" ? "var(--success-soft)" : profile.status === "inactive" ? "var(--error-soft)" : "var(--info-soft)",
-                color: profile.status === "active" ? "var(--success)" : profile.status === "inactive" ? "var(--error)" : "var(--info)",
-                border: "none",
-              }}
+              className={`inline-flex items-center rounded-full text-xs font-semibold px-1.5 py-0.5 ${profile.status === "active" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400" : profile.status === "inactive" ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400" : "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"}`}
             >
               {profile.status}
             </span>
@@ -199,54 +194,49 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2 className="icon-with-label">
+      <div className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
+          <h2 className="inline-flex items-center gap-1">
             <FiMonitor aria-hidden="true" />
             <span>Sessions</span>
           </h2>
         </div>
 
-        <div className="table-wrap">
+        <div className="max-h-64 overflow-auto border rounded-md">
           {sessionsLoading ? (
-            <p className="empty-row" style={{ padding: "1rem" }}>Loading sessions...</p>
+            <p className="text-muted-foreground text-center p-4">Loading sessions...</p>
           ) : sessions.length === 0 ? (
-            <p className="empty-row" style={{ padding: "1rem" }}>No active sessions.</p>
+            <p className="text-muted-foreground text-center p-4">No active sessions.</p>
           ) : (
-            <table className="data-table">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr>
-                  <th scope="col">Device</th>
-                  <th scope="col">Last used</th>
-                  <th scope="col">Created</th>
-                  <th scope="col">Status</th>
-                  <th scope="col"></th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Device</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Last used</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"></th>
                 </tr>
               </thead>
               <tbody>
                 {sessions.map((s) => (
-                  <tr key={s.id}>
-                    <td style={{ fontWeight: "500" }}>
-                      <span className="icon-with-label">
+                  <tr key={s.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left font-medium">
+                      <span className="inline-flex items-center gap-1">
                         <FiMonitor size={14} />
                         <span>{s.deviceLabel}</span>
                       </span>
                     </td>
-                    <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(s.lastUsedAt)}</td>
-                    <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(s.createdAt)}</td>
-                    <td>
+                    <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatDateTime(s.lastUsedAt)}</td>
+                    <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatDateTime(s.createdAt)}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
                       <span
-                        className="workflow-status-pill"
-                        style={{
-                          background: s.isActive ? "var(--success-soft)" : "var(--error-soft)",
-                          color: s.isActive ? "var(--success)" : "var(--error)",
-                          border: "none",
-                        }}
+                        className={`inline-flex items-center rounded-full text-xs font-semibold px-1.5 py-0.5 ${s.isActive ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400" : "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"}`}
                       >
                         {s.isActive ? "Active" : "Revoked"}
                       </span>
                     </td>
-                    <td>
+                    <td className="border-b px-2 py-1.5 text-left">
                       {s.isActive && (
                         <AppButton
                           variant="ghost"

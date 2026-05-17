@@ -6,13 +6,13 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { FiArrowLeft, FiChevronsRight, FiColumns, FiEye, FiEyeOff, FiList, FiPlus, FiSearch } from "react-icons/fi";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
 import Modal from "@/app/ui/modal";
 import TextField from "@/app/ui/textField";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
-import { cx } from "@/app/ui/cx";
 import {
   advanceIssueStatus,
   createIssue,
@@ -39,6 +39,9 @@ function issueStatusLabel(status: IssueWorkflowItem["status"]): string {
 }
 
 type ViewMode = "table" | "kanban";
+
+const viewToggleBtnClass = "inline-flex items-center gap-1 border-0 bg-accent text-muted-foreground cursor-pointer text-sm font-semibold px-2 py-1.5 transition-colors hover:bg-muted hover:text-foreground";
+const viewToggleBtnActiveClass = "bg-primary/10 text-primary";
 
 export default function IssuesWorkflowView({
   assignees,
@@ -209,30 +212,34 @@ export default function IssuesWorkflowView({
       : null;
 
     return (
-      <div key={item.id} className="kanban-card">
-        <Link href={`/issues/${item.id}`} className="kanban-card-title" style={{ textDecoration: "none" }}>
+      <div key={item.id} className="border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm">
+        <Link href={`/issues/${item.id}`} className="font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline">
           {item.title}
         </Link>
         {item.description ? (
-          <div className="kanban-card-desc">{item.description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
         ) : null}
-        <div className="kanban-card-meta">
-          <span className="kanban-card-meta-item">{item.projectName}</span>
-          {item.taskTitle && <span className="kanban-card-meta-item">{item.taskTitle}</span>}
-          <span className="kanban-card-meta-item">{item.assigneeName ?? "Unassigned"}</span>
+        <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.projectName}</span>
+          {item.taskTitle && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.taskTitle}</span>}
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
         </div>
-        <div className="kanban-card-footer">
-          <div className="button-row">
-            <button
-              onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
-              disabled={isTogglingFollowId === item.id}
-              className="slack-action-btn"
-              title={item.isFollowing ? "Unfollow" : "Follow"}
-            >
-              {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-            </button>
+        <div className="flex items-center justify-between gap-1 mt-0.5 pt-0.5 border-t">
+          <div className="flex items-center gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
+                  disabled={isTogglingFollowId === item.id}
+                  className="inline-flex items-center justify-center w-6 h-6 rounded border-0 bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{item.isFollowing ? "Unfollow" : "Follow"}</TooltipContent>
+            </Tooltip>
           </div>
-          <div className="button-row">
+          <div className="flex items-center gap-1.5">
             {canGoBack && (
               <AppButton
                 onClick={() => handleReverseIssue(item.id)}
@@ -263,28 +270,36 @@ export default function IssuesWorkflowView({
   };
 
   return (
-    <section className="workflow-stack">
-      <section className="card">
-        <div className="card-header">
+    <section className="flex flex-col gap-2 min-h-0">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <h2>Issues</h2>
-          <div className="card-controls">
-            <div className="view-toggle-group">
-              <button
-                className={cx("view-toggle-btn", viewMode === "table" && "is-active")}
-                onClick={() => setViewMode("table")}
-                title="Table view"
-              >
-                <FiList size={14} />
-                <span>Table</span>
-              </button>
-              <button
-                className={cx("view-toggle-btn", viewMode === "kanban" && "is-active")}
-                onClick={() => setViewMode("kanban")}
-                title="Kanban view"
-              >
-                <FiColumns size={14} />
-                <span>Board</span>
-              </button>
+          <div className="flex items-center gap-1.5">
+            <div className="inline-flex border rounded-md overflow-hidden">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`${viewToggleBtnClass} ${viewMode === "table" ? viewToggleBtnActiveClass : ""}`}
+                    onClick={() => setViewMode("table")}
+                  >
+                    <FiList size={14} />
+                    <span>Table</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Table view</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`${viewToggleBtnClass} ${viewMode === "kanban" ? viewToggleBtnActiveClass : ""}`}
+                    onClick={() => setViewMode("kanban")}
+                  >
+                    <FiColumns size={14} />
+                    <span>Board</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Kanban view</TooltipContent>
+              </Tooltip>
             </div>
             <AppButton
               onClick={() => setIsModalOpen(true)}
@@ -304,31 +319,30 @@ export default function IssuesWorkflowView({
         )}
 
         {issues.length === 0 && hasProject ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+            <div className="text-muted-foreground opacity-40">
               <FiSearch size={32} aria-hidden="true" />
             </div>
-            <p className="empty-state-title">No issues yet</p>
+            <p className="text-lg font-semibold">No issues yet</p>
             <p>Create your first issue to track problems and bugs.</p>
           </div>
         ) : (
           <>
-            <div className="kanban-filter-bar">
-              <div style={{ flex: 1, minWidth: "10rem", position: "relative" }}>
+            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+              <div className="relative flex-1 min-w-40">
                 <FiSearch
                   size={16}
-                  style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none", zIndex: 1 }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10"
                 />
                 <input
-                  className="text-input"
-                  style={{ paddingLeft: "2rem", width: "100%" }}
+                  className="w-full border rounded-md bg-accent text-foreground text-sm pl-8 pr-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search issues..."
                 />
               </div>
               <select
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 aria-label="Filter by status"
@@ -340,7 +354,7 @@ export default function IssuesWorkflowView({
                 <option value="closed">Closed</option>
               </select>
               <select
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
                 value={filterProjectId}
                 onChange={(e) => setFilterProjectId(e.target.value)}
                 aria-label="Filter by project"
@@ -362,95 +376,95 @@ export default function IssuesWorkflowView({
                   Clear
                 </AppButton>
               )}
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
                 {filteredIssues.length} of {issues.length}
               </span>
             </div>
 
             {viewMode === "kanban" ? (
-              <div className="kanban-board">
-                <div className="kanban-col is-new">
-                  <div className="kanban-col-header">
-                    <span className="kanban-col-title">Open</span>
-                    <span className="kanban-col-count">{kanbanGroups.open.length}</span>
+              <div className="flex gap-2 overflow-x-auto pb-0.5 flex-1 min-h-0 w-full">
+                <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-blue-50 dark:bg-blue-950/30">
+                  <div className="flex items-center gap-1 px-0.5">
+                    <span className="font-semibold text-sm">Open</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.open.length}</span>
                   </div>
-                  <div className="kanban-card-list">
+                  <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.open.map(kanbanIssueCard)}
-                    {kanbanGroups.open.length === 0 && <p className="kanban-empty-col">No issues</p>}
+                    {kanbanGroups.open.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
                   </div>
                 </div>
-                <div className="kanban-col is-active">
-                  <div className="kanban-col-header">
-                    <span className="kanban-col-title">In Progress</span>
-                    <span className="kanban-col-count">{kanbanGroups.inProgress.length}</span>
+                <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-amber-50 dark:bg-amber-950/30">
+                  <div className="flex items-center gap-1 px-0.5">
+                    <span className="font-semibold text-sm">In Progress</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.inProgress.length}</span>
                   </div>
-                  <div className="kanban-card-list">
+                  <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.inProgress.map(kanbanIssueCard)}
-                    {kanbanGroups.inProgress.length === 0 && <p className="kanban-empty-col">No issues</p>}
+                    {kanbanGroups.inProgress.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
                   </div>
                 </div>
-                <div className="kanban-col">
-                  <div className="kanban-col-header">
-                    <span className="kanban-col-title">Resolved</span>
-                    <span className="kanban-col-count">{kanbanGroups.resolved.length}</span>
+                <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0">
+                  <div className="flex items-center gap-1 px-0.5">
+                    <span className="font-semibold text-sm">Resolved</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.resolved.length}</span>
                   </div>
-                  <div className="kanban-card-list">
+                  <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.resolved.map(kanbanIssueCard)}
-                    {kanbanGroups.resolved.length === 0 && <p className="kanban-empty-col">No issues</p>}
+                    {kanbanGroups.resolved.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
                   </div>
                 </div>
-                <div className="kanban-col is-done">
-                  <div className="kanban-col-header">
-                    <span className="kanban-col-title">Closed</span>
-                    <span className="kanban-col-count">{kanbanGroups.closed.length}</span>
+                <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-emerald-50 dark:bg-emerald-950/30">
+                  <div className="flex items-center gap-1 px-0.5">
+                    <span className="font-semibold text-sm">Closed</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.closed.length}</span>
                   </div>
-                  <div className="kanban-card-list">
+                  <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.closed.map(kanbanIssueCard)}
-                    {kanbanGroups.closed.length === 0 && <p className="kanban-empty-col">No issues</p>}
+                    {kanbanGroups.closed.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="table-wrap">
-                <table className="data-table">
+              <div className="max-h-64 overflow-auto border rounded-md">
+                <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr>
-                      <th scope="col">Issue</th>
-                      <th scope="col">Project</th>
-                      <th scope="col">Task</th>
-                      <th scope="col">Assignee</th>
-                      <th scope="col">Status</th>
-                      <th scope="col">Action</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Issue</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Task</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Assignee</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
+                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredIssues.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="empty-row">
+                        <td colSpan={6} className="text-muted-foreground text-center border-b px-2 py-1.5 text-left">
                           No issues match your filters.
                         </td>
                       </tr>
                     ) : (
                       filteredIssues.map((item) => (
-                        <tr key={item.id}>
-                          <td>
-                            <Link href={`/issues/${item.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-                              <div className="workflow-title">{item.title}</div>
+                        <tr key={item.id} className="transition-colors hover:bg-accent">
+                          <td className="border-b px-2 py-1.5 text-left">
+                            <Link href={`/issues/${item.id}`} className="no-underline text-inherit block">
+                              <div className="font-semibold">{item.title}</div>
                               {item.description ? (
-                                <p className="workflow-subtext">{item.description}</p>
+                                <p className="mt-1 text-muted-foreground text-xs">{item.description}</p>
                               ) : null}
                             </Link>
                           </td>
-                          <td>{item.projectName}</td>
-                          <td>{item.taskTitle ?? "-"}</td>
-                          <td>{item.assigneeName ?? "Unassigned"}</td>
-                          <td>
-                            <span className="workflow-status-pill">
+                          <td className="border-b px-2 py-1.5 text-left">{item.projectName}</td>
+                          <td className="border-b px-2 py-1.5 text-left">{item.taskTitle ?? "-"}</td>
+                          <td className="border-b px-2 py-1.5 text-left">{item.assigneeName ?? "Unassigned"}</td>
+                          <td className="border-b px-2 py-1.5 text-left">
+                            <span className="inline-flex items-center border rounded-full bg-accent text-muted-foreground text-xs font-semibold px-1.5 py-0.5">
                               {issueStatusLabel(item.status)}
                             </span>
                           </td>
-                          <td>
-                            <div className="button-row">
+                          <td className="border-b px-2 py-1.5 text-left">
+                            <div className="flex items-center gap-1.5">
                               <AppButton
                                 variant="secondary"
                                 onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
@@ -497,12 +511,12 @@ export default function IssuesWorkflowView({
         }}
         title="Create issue"
       >
-        <div className="workflow-form-grid">
-          <div className="field-wrap">
-            <label htmlFor="issue-project" className="field-label">Project</label>
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="issue-project" className="text-sm font-semibold text-muted-foreground">Project</label>
             <select
               id="issue-project"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={projectId}
               onChange={(event) => handleProjectChange(event.target.value)}
               disabled={isSubmitting}
@@ -513,11 +527,11 @@ export default function IssuesWorkflowView({
             </select>
           </div>
 
-          <div className="field-wrap">
-            <label htmlFor="issue-task" className="field-label">Linked task</label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="issue-task" className="text-sm font-semibold text-muted-foreground">Linked task</label>
             <select
               id="issue-task"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={taskId}
               onChange={(event) => setTaskId(event.target.value)}
               disabled={isSubmitting}
@@ -529,11 +543,11 @@ export default function IssuesWorkflowView({
             </select>
           </div>
 
-          <div className="field-wrap">
-            <label htmlFor="issue-assignee" className="field-label">Assignee</label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="issue-assignee" className="text-sm font-semibold text-muted-foreground">Assignee</label>
             <select
               id="issue-assignee"
-              className="text-input"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
               value={assigneeUserId}
               onChange={(event) => setAssigneeUserId(event.target.value)}
               disabled={isSubmitting}
@@ -558,11 +572,11 @@ export default function IssuesWorkflowView({
             required
           />
 
-          <div className="field-wrap workflow-span-all">
-            <label htmlFor="issue-description" className="field-label">Description</label>
+          <div className="flex flex-col gap-1 col-span-2">
+            <label htmlFor="issue-description" className="text-sm font-semibold text-muted-foreground">Description</label>
             <textarea
               id="issue-description"
-              className="text-input workflow-textarea"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-16 resize-y"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Optional troubleshooting context and expected behavior."
@@ -571,7 +585,7 @@ export default function IssuesWorkflowView({
           </div>
         </div>
 
-        <div className="workflow-actions">
+        <div className="flex items-center gap-2">
           <AppButton
             onClick={handleCreateIssue}
             disabled={!hasProject}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { FiBell, FiCheck, FiMail, FiNavigation } from "react-icons/fi";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UnreadCounts {
   unreadMessageCount: number;
@@ -145,66 +146,74 @@ export default function InboxControls(): ReactElement {
 
   return (
     <div
-      className="inbox-controls"
+      className="relative flex items-center gap-1"
       ref={dropdownRef}
     >
-      <Link
-        href="/messages"
-        className="inbox-link"
-        title="Messages"
-      >
-        <FiMail size={15} aria-hidden="true" />
-        {counts.unreadMessageCount > 0 ? (
-          <span className="inbox-badge">{counts.unreadMessageCount}</span>
-        ) : null}
-      </Link>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            href="/messages"
+            className="inline-flex items-center justify-center gap-1 border rounded-md bg-accent text-muted-foreground cursor-pointer text-sm font-semibold min-h-7 px-2 py-1 transition-colors hover:border-border hover:text-foreground"
+          >
+            <FiMail size={15} aria-hidden="true" />
+            {counts.unreadMessageCount > 0 ? (
+              <span className="inline-flex items-center justify-center min-w-4 rounded-full bg-primary text-primary-foreground text-xs font-bold px-1 py-0.5 leading-none">{counts.unreadMessageCount}</span>
+            ) : null}
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent>Messages</TooltipContent>
+      </Tooltip>
 
-      <button
-        type="button"
-        className="notification-bell-button"
-        onClick={() => {
-          setIsOpen((current) => !current);
-          if (!isOpen) {
-            void refreshNotifications();
-          }
-        }}
-        aria-label="Open notifications"
-        title="Notifications"
-      >
-        <FiBell size={15} aria-hidden="true" />
-        {counts.unreadNotificationCount > 0 ? (
-          <span className="inbox-badge">{counts.unreadNotificationCount}</span>
-        ) : null}
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1 border rounded-md bg-accent text-muted-foreground cursor-pointer text-sm font-semibold min-h-7 px-2 py-1 transition-colors hover:border-border hover:text-foreground"
+            onClick={() => {
+              setIsOpen((current) => !current);
+              if (!isOpen) {
+                void refreshNotifications();
+              }
+            }}
+            aria-label="Open notifications"
+          >
+            <FiBell size={15} aria-hidden="true" />
+            {counts.unreadNotificationCount > 0 ? (
+              <span className="inline-flex items-center justify-center min-w-4 rounded-full bg-primary text-primary-foreground text-xs font-bold px-1 py-0.5 leading-none">{counts.unreadNotificationCount}</span>
+            ) : null}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Notifications</TooltipContent>
+      </Tooltip>
 
       {isOpen ? (
-        <div className="notification-dropdown">
-          <div className="notification-dropdown-header">
-            <span className="icon-with-label">
+        <div className="absolute top-[calc(100%+0.35rem)] right-0 z-30 w-[min(22rem,85vw)] border rounded-lg bg-card shadow-elevated overflow-hidden">
+          <div className="flex items-center justify-between border-b px-2 py-1.5 text-sm">
+            <span className="inline-flex items-center gap-1">
               <FiBell size={14} aria-hidden="true" />
               <span>Notifications</span>
             </span>
             <button
               type="button"
-              className="text-link-button"
+              className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
               onClick={() => void markAllRead()}
             >
               <FiCheck size={13} aria-hidden="true" />
               Mark all read
             </button>
           </div>
-          <div className="notification-list">
+          <div className="max-h-56 overflow-auto">
             {notifications.length === 0 ? (
-              <p className="notification-empty">No notifications yet.</p>
+              <p className="text-muted-foreground text-sm p-2">No notifications yet.</p>
             ) : (
               notifications.map((item) => (
                 <div
                   key={item.id}
-                  className={`notification-item ${item.isRead ? "is-read" : "is-unread"}`}
+                  className={`flex gap-1.5 items-start justify-between border-b px-2 py-1.5 last:border-b-0${item.isRead ? "" : " bg-primary/5"}`}
                 >
                   <Link
                     href={item.href}
-                    className="notification-item-link"
+                    className="flex-1"
                     onClick={() => {
                       setIsOpen(false);
                       if (!item.isRead) {
@@ -212,14 +221,14 @@ export default function InboxControls(): ReactElement {
                       }
                     }}
                   >
-                    <p className="notification-title">{item.title}</p>
-                    {item.body ? <p className="notification-body">{item.body}</p> : null}
-                    <p className="notification-time">{formatTimestamp(item.createdAt)}</p>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    {item.body ? <p className="mt-0.5 text-muted-foreground text-xs">{item.body}</p> : null}
+                    <p className="mt-0.5 text-muted-foreground text-xs">{formatTimestamp(item.createdAt)}</p>
                   </Link>
                   {!item.isRead ? (
                     <button
                       type="button"
-                      className="text-link-button"
+                      className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
                       onClick={() => void markNotificationRead(item.id)}
                     >
                       <FiCheck size={13} aria-hidden="true" />
@@ -232,7 +241,7 @@ export default function InboxControls(): ReactElement {
           </div>
           <Link
             href="/notifications"
-            className="notification-footer-link"
+            className="inline-flex items-center gap-1 border-t border-border text-primary text-sm font-semibold p-2 w-full hover:text-primary/80"
             onClick={() => setIsOpen(false)}
           >
             <FiNavigation size={13} aria-hidden="true" />

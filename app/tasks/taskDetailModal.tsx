@@ -95,50 +95,46 @@ export default function TaskDetailModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Task details">
       {isLoading ? (
-        <p className="empty-row">Loading task details...</p>
+        <p className="text-muted-foreground text-center py-2">Loading task details...</p>
       ) : task ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {/* Title with icon */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
-            <FiCheckCircle size={20} style={{ marginTop: "0.15rem", flexShrink: 0, color: "var(--brand)" }} />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-2">
+            <FiCheckCircle size={20} className="mt-0.5 shrink-0 text-primary" />
             <div>
-              <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 650 }}>{task.title}</h2>
-              <p style={{ margin: "0.1rem 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+              <h2 className="m-0 text-lg font-semibold">{task.title}</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {task.projectName} · {task.phaseName}
               </p>
             </div>
           </div>
 
-          {/* Detail fields */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <div className="field-wrap">
-              <label className="field-label">Status</label>
-              <p style={{ fontWeight: 500 }}>{taskStatusLabel(task.status)}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Status</label>
+              <p className="font-medium">{taskStatusLabel(task.status)}</p>
             </div>
-            <div className="field-wrap">
-              <label className="field-label">Assignee</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Assignee</label>
               <p>{task.assigneeName ?? "Unassigned"}</p>
             </div>
-            <div className="field-wrap">
-              <label className="field-label">Due Date</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Due Date</label>
               <p>{formatDueDate(task.dueAt)}</p>
             </div>
-            <div className="field-wrap">
-              <label className="field-label">Created</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Created</label>
               <p>{formatDateTime(task.createdAt)}</p>
             </div>
           </div>
 
-          {/* Description */}
           {task.description && (
-            <div className="field-wrap">
-              <label className="field-label">Description</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Description</label>
               <p>{task.description}</p>
             </div>
           )}
 
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div className="flex gap-2 flex-wrap">
             <AppButton
               onClick={() => void handleToggleFollow()}
               disabled={isTogglingFollow}
@@ -160,10 +156,9 @@ export default function TaskDetailModal({
             </AppButton>
           </div>
 
-          {/* Full page link */}
-          <div style={{ textAlign: "right", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
-            <Link href={`/tasks/${task.id}`} className="text-link" onClick={onClose}>
-              <span className="icon-with-label">
+          <div className="text-right pt-2 border-t">
+            <Link href={`/tasks/${task.id}`} className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80" onClick={onClose}>
+              <span className="inline-flex items-center gap-1">
                 Open full page <FiExternalLink />
               </span>
             </Link>

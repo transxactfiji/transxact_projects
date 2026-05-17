@@ -74,12 +74,12 @@ export default function AuthPage(): ReactElement {
 
   if (showCodeInput) {
     return (
-      <section className="auth-card">
-        <h1 className="icon-with-label">
+      <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
+        <h1 className="inline-flex items-center gap-1">
           <FiKey aria-hidden="true" />
           <span>Enter your login code</span>
         </h1>
-        <p className="auth-description">
+        <p className="mt-1 text-muted-foreground text-sm">
           Enter the code sent to <strong>{email}</strong>.
         </p>
         <EnterCodeForm
@@ -98,17 +98,17 @@ export default function AuthPage(): ReactElement {
   }
 
   return (
-    <section className="auth-card">
-      <h1 className="icon-with-label">
+    <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
+      <h1 className="inline-flex items-center gap-1">
         <FiMail aria-hidden="true" />
         <span>Login</span>
       </h1>
-      <p className="auth-description">
+      <p className="mt-1 text-muted-foreground text-sm">
         We use one-time codes for secure login. Enter your email to continue.
       </p>
       <form
         onSubmit={handleEmailSubmit}
-        className="form-stack"
+        className="mt-2.5 flex flex-col gap-2"
       >
         <TextField
           id="email"

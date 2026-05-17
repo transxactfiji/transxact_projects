@@ -7,7 +7,7 @@ import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
 import { Loading } from "@/app/ui/loading";
-import { statusBadgeMap, roleBadgeMap } from "@/app/ui/formStatus";
+import { statusBadgeClassMap, roleBadgeClassMap } from "@/app/ui/formStatus";
 
 interface User {
   id: number;
@@ -146,53 +146,53 @@ export function AdminUserDetail({ userId }: { userId: number }) {
 
   if (!user) {
     return (
-      <section className="workflow-stack">
-        <div className="card" style={{ textAlign: "center", padding: "3rem 1rem" }}>
-          <p className="empty-row">User not found</p>
+      <section className="flex flex-col gap-2 min-h-0">
+        <div className="rounded-lg border bg-card shadow-card text-center py-12 px-4">
+          <p className="text-muted-foreground text-center">User not found</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="workflow-stack">
-      <Link href="/admin/users" className="text-link">
-        <span className="icon-with-label">
+    <section className="flex flex-col gap-2 min-h-0">
+      <Link href="/admin/users" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
+        <span className="inline-flex items-center gap-1">
           <FiArrowLeft /> Back to Users
         </span>
       </Link>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.25rem" }}>
-        <div className="card">
-          <div className="card-header">
+      <div className="grid grid-cols-1 gap-5">
+        <div className="rounded-lg border bg-card shadow-card p-2.5">
+          <div className="flex flex-wrap gap-2 justify-between mb-2">
             <h2>User Information</h2>
           </div>
 
-          <div className="form-stack" style={{ marginTop: 0 }}>
-            <div className="field-wrap">
-              <label className="field-label">Name</label>
-              <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+          <div className="mt-0 flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Name</label>
+              <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                 {user.name || "\u2014"}
               </p>
             </div>
 
-            <div className="field-wrap">
-              <label className="field-label">Email</label>
-              <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Email</label>
+              <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                 {user.email}
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-              <div className="field-wrap">
-                <label className="field-label">Created</label>
-                <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-muted-foreground">Created</label>
+                <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </p>
               </div>
-              <div className="field-wrap">
-                <label className="field-label">Last Login</label>
-                <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-muted-foreground">Last Login</label>
+                <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                   {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}
                 </p>
               </div>
@@ -200,20 +200,19 @@ export function AdminUserDetail({ userId }: { userId: number }) {
           </div>
         </div>
 
-        <div className="card">
-          <div className="card-header">
+        <div className="rounded-lg border bg-card shadow-card p-2.5">
+          <div className="flex flex-wrap gap-2 justify-between mb-2">
             <h2>Manage User</h2>
           </div>
 
-          <div className="form-stack" style={{ marginTop: 0 }}>
-            <div className="field-wrap">
-              <label className="field-label">Role</label>
-              <div className="button-row">
+          <div className="mt-0 flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Role</label>
+              <div className="flex items-center gap-1.5">
                 <select
                   value={newRole || ""}
                   onChange={(e) => setNewRole(e.target.value as "admin" | "member")}
-                  className="filter-input"
-                  style={{ flex: 1 }}
+                  className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary flex-1"
                 >
                   <option value="admin">Admin</option>
                   <option value="member">Member</option>
@@ -228,19 +227,18 @@ export function AdminUserDetail({ userId }: { userId: number }) {
                   </AppButton>
                 )}
               </div>
-              <p className="field-note">
+              <p className="text-xs text-muted-foreground">
                 Current: <strong>{user.role}</strong>
               </p>
             </div>
 
-            <div className="field-wrap">
-              <label className="field-label">Status</label>
-              <div className="button-row">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Status</label>
+              <div className="flex items-center gap-1.5">
                 <select
                   value={newStatus || ""}
                   onChange={(e) => setNewStatus(e.target.value as "active" | "inactive" | "pending")}
-                  className="filter-input"
-                  style={{ flex: 1 }}
+                  className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary flex-1"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
@@ -256,22 +254,20 @@ export function AdminUserDetail({ userId }: { userId: number }) {
                   </AppButton>
                 )}
               </div>
-              <p className="field-note">
+              <p className="text-xs text-muted-foreground">
                 Current: <strong>{user.status}</strong>
               </p>
             </div>
 
-            <div style={{ paddingTop: "0.75rem", borderTop: "1px solid var(--border)" }}>
-              <div className="button-row">
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="workflow-status-pill"
-                  style={{ ...roleBadgeMap[user.role], border: "none" }}
+                  className={`inline-flex items-center border-none rounded-full text-xs font-semibold px-1.5 py-0.5 ${roleBadgeClassMap[user.role] ?? "bg-accent text-muted-foreground"}`}
                 >
                   {user.role}
                 </span>
                 <span
-                  className="workflow-status-pill"
-                  style={{ ...statusBadgeMap[user.status], border: "none" }}
+                  className={`inline-flex items-center border-none rounded-full text-xs font-semibold px-1.5 py-0.5 ${statusBadgeClassMap[user.status] ?? "bg-accent text-muted-foreground"}`}
                 >
                   {user.status}
                 </span>
@@ -281,43 +277,43 @@ export function AdminUserDetail({ userId }: { userId: number }) {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
+      <div className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <h2>Audit Log</h2>
         </div>
 
         {auditLogs.length === 0 ? (
-          <p className="empty-row" style={{ padding: "2rem 0" }}>
+          <p className="text-muted-foreground text-center py-8">
             No audit logs yet
           </p>
         ) : (
-          <div className="table-wrap" style={{ maxHeight: "none" }}>
-            <table className="data-table">
+          <div className="max-h-[none] overflow-auto border rounded-md">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr>
-                  <th scope="col">Action</th>
-                  <th scope="col">Previous Value</th>
-                  <th scope="col">New Value</th>
-                  <th scope="col">Date</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Previous Value</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">New Value</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {auditLogs.map((log) => (
-                  <tr key={log.id}>
-                    <td style={{ textTransform: "capitalize" }}>
+                  <tr key={log.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left capitalize">
                       <strong>{log.action.replace("_", " ")}</strong>
                     </td>
-                    <td>
-                      <code className="workflow-status-pill" style={{ background: "var(--surface-muted)", border: "none" }}>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <code className="inline-flex items-center rounded-full bg-accent text-muted-foreground text-xs font-semibold px-1.5 py-0.5">
                         {log.previousValue || "\u2014"}
                       </code>
                     </td>
-                    <td>
-                      <code className="workflow-status-pill" style={{ background: "var(--surface-muted)", border: "none" }}>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <code className="inline-flex items-center rounded-full bg-accent text-muted-foreground text-xs font-semibold px-1.5 py-0.5">
                         {log.newValue || "\u2014"}
                       </code>
                     </td>
-                    <td style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: 500 }}>
+                    <td className="border-b px-2 py-1.5 text-left text-muted-foreground text-sm font-medium">
                       {new Date(log.createdAt).toLocaleDateString()}
                     </td>
                   </tr>

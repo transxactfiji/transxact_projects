@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Modal from "@/app/ui/modal";
 import { formatDateTime, getInitials, getAvatarColorByLabel } from "@/lib/utils";
 import { AVATAR_COLORS } from "@/lib/constants";
@@ -121,38 +122,37 @@ export default function TaskCommentModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Comments: ${taskTitle}`}>
-      {/* Comment thread */}
-      <div className="slack-thread" style={{ maxHeight: "22rem", overflow: "auto", marginBottom: "0.75rem" }}>
+      <div className="flex flex-col max-h-[22rem] overflow-auto mb-3">
         {isLoading ? (
-          <p className="empty-row">Loading comments...</p>
+          <p className="text-muted-foreground text-center py-2">Loading comments...</p>
         ) : comments.length === 0 ? (
-          <p className="empty-row">No comments yet.</p>
+          <p className="text-muted-foreground text-center py-2">No comments yet.</p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="slack-message">
+            <div key={comment.id} className="flex gap-2 px-1.5 py-1 rounded-md transition-colors hover:bg-accent relative group">
               <div
-                className="slack-avatar"
+                className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1 leading-none"
                 style={{ background: getAvatarColorByLabel(comment.authorLabel, AVATAR_COLORS) }}
               >
                 {getInitials(comment.authorLabel)}
               </div>
-              <div className="slack-body">
-                <div className="slack-header">
-                  <span className="slack-author">{comment.authorLabel}</span>
-                  <span className="slack-timestamp">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="font-bold text-sm">{comment.authorLabel}</span>
+                  <span className="text-xs text-muted-foreground">
                     {formatDateTime(comment.createdAt)}
                     {comment.isEdited ? " (edited)" : ""}
                   </span>
                 </div>
                 {editingCommentId === comment.id ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.3rem" }}>
+                  <div className="flex flex-col gap-1.5 mt-1">
                     <textarea
-                      className="text-input"
+                      className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                       value={editingCommentBody}
                       onChange={(e) => setEditingCommentBody(e.target.value)}
                       disabled={isEditingCommentId === comment.id}
                     />
-                    <div className="button-row">
+                    <div className="flex items-center gap-1.5">
                       <AppButton
                         variant="ghost"
                         onClick={() => void handleSaveEditComment(comment.id)}
@@ -175,26 +175,34 @@ export default function TaskCommentModal({
                     </div>
                   </div>
                 ) : (
-                  <div className="slack-text">{comment.body}</div>
+                  <div className="text-sm leading-relaxed mt-0.5 break-words whitespace-pre-wrap">{comment.body}</div>
                 )}
               </div>
               {comment.isOwn && editingCommentId !== comment.id && (
-                <div className="slack-actions">
-                  <button
-                    onClick={() => handleEditComment(comment.id, comment.body)}
-                    className="slack-action-btn"
-                    title="Edit"
-                  >
-                    <FiEdit2 size={13} />
-                  </button>
-                  <button
-                    onClick={() => void handleDeleteComment(comment.id)}
-                    disabled={isDeletingCommentId === comment.id}
-                    className="slack-action-btn is-danger"
-                    title="Delete"
-                  >
-                    <FiTrash2 size={13} />
-                  </button>
+                <div className="flex gap-0.5 opacity-0 transition-opacity absolute right-1.5 -top-2 bg-card border rounded-md p-0.5 shadow-card group-hover:opacity-100">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => handleEditComment(comment.id, comment.body)}
+                        className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        <FiEdit2 size={13} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => void handleDeleteComment(comment.id)}
+                        disabled={isDeletingCommentId === comment.id}
+                        className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-destructive cursor-pointer transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <FiTrash2 size={13} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
                 </div>
               )}
             </div>
@@ -202,8 +210,7 @@ export default function TaskCommentModal({
         )}
       </div>
 
-      {/* Input bar */}
-      <div className="slack-input-bar">
+      <div className="flex items-end gap-1.5 border rounded-md px-2 py-1 bg-card transition-colors focus-within:border-primary">
         <textarea
           value={commentDraft}
           onChange={(e) => setCommentDraft(e.target.value)}

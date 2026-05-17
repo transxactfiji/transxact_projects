@@ -7,6 +7,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye, FiPaperclip, FiDownload } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import { formatDateTime, formatDueDate, getInitials, getAvatarColorByLabel } from "@/lib/utils";
 import { AVATAR_COLORS } from "@/lib/constants";
@@ -84,7 +85,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
     setIsEditing(false);
 
     try {
-      router.refresh(); // optimistic
+      router.refresh();
       await updateTask(task.id, {
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
@@ -261,35 +262,32 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
   };
 
   return (
-    <section className="workflow-stack">
-      {/* Back Navigation */}
+    <section className="flex flex-col gap-2 min-h-0">
       {!hideBackLink && (
-        <Link href="/tasks" className="text-link" style={{ marginBottom: 0 }}>
-          <span className="icon-with-label"><FiArrowLeft /> Back</span>
+        <Link href="/tasks" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
+          <span className="inline-flex items-center gap-1"><FiArrowLeft /> Back</span>
         </Link>
       )}
 
-      {/* Main Content */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             {isEditing ? (
               <input
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground text-lg font-semibold"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                style={{ fontSize: "1.2rem", fontWeight: 650, width: "100%" }}
               />
             ) : (
               <>
                 <h1>{task.title}</h1>
-                <p className="workflow-subtext">{task.projectName}</p>
+                <p className="mt-1 text-muted-foreground text-xs">{task.projectName}</p>
               </>
             )}
           </div>
-          <div className="card-controls">
+          <div className="flex items-center gap-1.5">
             {isEditing ? (
-              <div className="button-row">
+              <div className="flex items-center gap-1.5">
                 <AppButton variant="ghost" onClick={handleCancelEdit}>Cancel</AppButton>
                 <AppButton onClick={() => void handleSaveEdit()}>Save</AppButton>
               </div>
@@ -301,23 +299,23 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
-          <div className="field-wrap">
-            <label className="field-label">Status</label>
-            <p style={{ fontWeight: "500" }}>{taskStatusLabel(task.status)}</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Status</label>
+            <p className="font-medium">{taskStatusLabel(task.status)}</p>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Assignee</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Assignee</label>
             <p>{task.assigneeName ?? "Unassigned"}</p>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Due Date</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Due Date</label>
             {isEditing ? (
               <input
                 type="date"
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 value={editDueOn}
                 onChange={(e) => setEditDueOn(e.target.value)}
               />
@@ -326,14 +324,11 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
             )}
           </div>
 
-          <div
-            className="field-wrap"
-            style={{ gridColumn: "1 / -1" }}
-          >
-            <label className="field-label">Description</label>
+          <div className="flex flex-col gap-1 col-span-3">
+            <label className="text-sm font-semibold text-muted-foreground">Description</label>
             {isEditing ? (
               <textarea
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 rows={3}
@@ -341,33 +336,33 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
             ) : task.description ? (
               <p>{task.description}</p>
             ) : (
-              <p style={{ color: "var(--text-muted)" }}>No description.</p>
+              <p className="text-muted-foreground">No description.</p>
             )}
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Created</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Created</label>
             <p>
               {formatDateTime(task.createdAt)} by <strong>{task.createdByUserName}</strong>
             </p>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Progress</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Progress</label>
             <AppButton
               onClick={() => void handleAdvanceTask()}
               disabled={task.status === "completed" || isAdvancing}
               isLoading={isAdvancing}
               loadingLabel="Updating..."
               variant="ghost"
-              style={{ alignSelf: "start" }}
+              className="self-start"
             >
               {task.status === "not_started" ? "Start" : task.status === "in_progress" ? "Mark Complete" : "Completed"}
             </AppButton>
           </div>
 
-          <div className="field-wrap">
-            <label className="field-label">Follow</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-muted-foreground">Follow</label>
             <AppButton
               onClick={() => void handleToggleFollow()}
               disabled={isTogglingFollow}
@@ -375,7 +370,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
               loadingLabel={isFollowing ? "Unfollowing..." : "Following..."}
               startIcon={isFollowing ? <FiHeart aria-hidden="true" /> : <FiEye aria-hidden="true" />}
               variant="ghost"
-              style={{ alignSelf: "start" }}
+              className="self-start"
             >
               {isFollowing ? "Following" : "Follow"}
             </AppButton>
@@ -383,45 +378,43 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
         </div>
       </section>
 
-      {/* Comments Section */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Comments ({task.comments.length})</h2>
           </div>
         </div>
 
-        <div className="workflow-stack">
-          {/* Comment Thread */}
-          <div className="slack-thread">
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex flex-col">
             {task.comments.length === 0 ? (
-              <p className="empty-row">No comments yet.</p>
+              <p className="text-muted-foreground text-center py-2">No comments yet.</p>
             ) : (
               task.comments.map((comment) => (
-                <div key={comment.id} className="slack-message">
+                <div key={comment.id} className="flex gap-2 px-1.5 py-1 rounded-md transition-colors hover:bg-accent relative group">
                   <div
-                    className="slack-avatar"
+                    className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold text-white shrink-0 mt-1 leading-none"
                     style={{ background: getAvatarColorByLabel(comment.authorLabel, AVATAR_COLORS) }}
                   >
                     {getInitials(comment.authorLabel)}
                   </div>
-                  <div className="slack-body">
-                    <div className="slack-header">
-                      <span className="slack-author">{comment.authorLabel}</span>
-                      <span className="slack-timestamp">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="font-bold text-sm">{comment.authorLabel}</span>
+                      <span className="text-xs text-muted-foreground">
                         {formatDateTime(comment.createdAt)}
                         {comment.isEdited ? " (edited)" : ""}
                       </span>
                     </div>
                     {editingCommentId === comment.id ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.3rem" }}>
+                      <div className="flex flex-col gap-1.5 mt-1">
                         <textarea
-                          className="text-input"
+                          className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                           value={editingCommentBody}
                           onChange={(e) => setEditingCommentBody(e.target.value)}
                           disabled={isEditingCommentId === comment.id}
                         />
-                        <div className="button-row">
+                        <div className="flex items-center gap-1.5">
                           <AppButton
                             variant="ghost"
                             onClick={() => void handleSaveEditComment(comment.id)}
@@ -444,36 +437,42 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
                         </div>
                       </div>
                     ) : (
-                      <div className="slack-text">{comment.body}</div>
+                      <div className="text-sm leading-relaxed mt-0.5 break-words whitespace-pre-wrap">{comment.body}</div>
                     )}
                   </div>
                   {comment.isOwn && editingCommentId !== comment.id && (
-                    <div className="slack-actions">
-                      <button
-                        onClick={() => handleEditComment(comment.id, comment.body)}
-                        className="slack-action-btn"
-                        title="Edit"
-                      >
-                        <FiEdit2 size={13} />
-                      </button>
-                      <button
-                        onClick={() => void handleDeleteComment(comment.id)}
-                        disabled={isDeletingCommentId === comment.id}
-                        className="slack-action-btn is-danger"
-                        title="Delete"
-                      >
-                        <FiTrash2 size={13} />
-                      </button>
+                    <div className="flex gap-0.5 opacity-0 transition-opacity absolute right-1.5 -top-2 bg-card border rounded-md p-0.5 shadow-card group-hover:opacity-100">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleEditComment(comment.id, comment.body)}
+                            className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            <FiEdit2 size={13} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => void handleDeleteComment(comment.id)}
+                            disabled={isDeletingCommentId === comment.id}
+                            className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-destructive cursor-pointer transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <FiTrash2 size={13} />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
                     </div>
                   )}
-                  {comment.isOwn && editingCommentId === comment.id && null}
                 </div>
               ))
             )}
           </div>
 
-          {/* Add Comment Form - like Slack input bar */}
-          <div className="slack-input-bar">
+          <div className="flex items-end gap-1.5 border rounded-md px-2 py-1 bg-card transition-colors focus-within:border-primary">
             <textarea
               id="comment-input"
               value={commentDraft}
@@ -501,31 +500,29 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
         </div>
       </section>
 
-      {/* Actions Section */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Actions ({task.actions.length})</h2>
           </div>
         </div>
 
-        <div className="workflow-stack">
-          {/* Add Action Form - at the top */}
-          <div className="workflow-form">
-            <div className="field-wrap" style={{ flex: 1 }}>
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex items-end gap-2 mb-2">
+            <div className="flex flex-col gap-1 flex-1">
               <input
                 id="action-name-input"
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 value={actionName}
                 onChange={(e) => setActionName(e.target.value)}
                 disabled={isAddingAction}
                 placeholder="Action name"
               />
             </div>
-            <div className="field-wrap" style={{ flex: 1 }}>
+            <div className="flex flex-col gap-1 flex-1">
               <input
                 id="action-desc-input"
-                className="text-input"
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 value={actionDescription}
                 onChange={(e) => setActionDescription(e.target.value)}
                 disabled={isAddingAction}
@@ -543,25 +540,25 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
           </div>
 
           {task.actions.length === 0 ? (
-            <p className="empty-row">No actions yet.</p>
+            <p className="text-muted-foreground text-center py-2">No actions yet.</p>
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
+            <div className="max-h-64 overflow-auto border rounded-md">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Created By</th>
-                    <th scope="col"></th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Name</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Description</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created By</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {task.actions.map((act) => (
-                    <tr key={act.id}>
-                      <td style={{ fontWeight: "500" }}>{act.name}</td>
-                      <td>{act.description ?? "—"}</td>
-                      <td style={{ color: "var(--text-secondary)" }}>{act.authorLabel}</td>
-                      <td>
+                    <tr key={act.id} className="transition-colors hover:bg-accent">
+                      <td className="border-b px-2 py-1.5 text-left font-medium">{act.name}</td>
+                      <td className="border-b px-2 py-1.5 text-left">{act.description ?? "—"}</td>
+                      <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{act.authorLabel}</td>
+                      <td className="border-b px-2 py-1.5 text-left">
                         {act.isOwn && (
                           <AppButton
                             onClick={() => void handleDeleteAction(act.id)}
@@ -583,24 +580,22 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
         </div>
       </section>
 
-      {/* Attachments Section */}
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Attachments ({task.attachments.length})</h2>
           </div>
         </div>
 
-        <div className="workflow-stack">
-          {/* Upload Form */}
-          <div className="workflow-form">
+        <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex items-end gap-2 mb-2">
             <input
               key={fileInputKey}
               type="file"
               id="file-upload-input"
               onChange={(e) => void handleUpload(e)}
               disabled={isUploading}
-              style={{ display: "none" }}
+              className="hidden"
             />
             <AppButton
               onClick={() => document.getElementById("file-upload-input")?.click()}
@@ -611,36 +606,36 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
             >
               Attach File
             </AppButton>
-            {isUploading && <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Uploading...</span>}
+            {isUploading && <span className="text-muted-foreground text-sm">Uploading...</span>}
           </div>
 
           {task.attachments.length === 0 ? (
-            <p className="empty-row">No attachments.</p>
+            <p className="text-muted-foreground text-center py-2">No attachments.</p>
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
+            <div className="max-h-64 overflow-auto border rounded-md">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th scope="col">File</th>
-                    <th scope="col">Size</th>
-                    <th scope="col">Uploaded</th>
-                    <th scope="col"></th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">File</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Size</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Uploaded</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {task.attachments.map((att) => (
-                    <tr key={att.id}>
-                      <td style={{ fontWeight: "500" }}>{att.fileName}</td>
-                      <td style={{ color: "var(--text-secondary)" }}>{formatFileSize(att.sizeBytes)}</td>
-                      <td style={{ color: "var(--text-secondary)" }}>{formatDateTime(att.createdAt)}</td>
-                      <td>
+                    <tr key={att.id} className="transition-colors hover:bg-accent">
+                      <td className="border-b px-2 py-1.5 text-left font-medium">{att.fileName}</td>
+                      <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatFileSize(att.sizeBytes)}</td>
+                      <td className="border-b px-2 py-1.5 text-left text-muted-foreground">{formatDateTime(att.createdAt)}</td>
+                      <td className="border-b px-2 py-1.5 text-left">
                         <a
                           href={`/api/uploads/${att.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-link"
+                          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80"
                         >
-                          <span className="icon-with-label"><FiDownload /> Download</span>
+                          <span className="inline-flex items-center gap-1"><FiDownload /> Download</span>
                         </a>
                       </td>
                     </tr>

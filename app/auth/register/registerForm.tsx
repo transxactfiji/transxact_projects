@@ -81,7 +81,7 @@ export default function RegisterForm(props: RegisterFormProps): ReactElement {
   return (
     <form
       onSubmit={handleSubmit}
-      className="form-stack"
+      className="mt-2.5 flex flex-col gap-2"
     >
       <TextField
         id="name"

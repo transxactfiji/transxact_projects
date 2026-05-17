@@ -45,9 +45,9 @@ export default function ReportsView({ reports }: ReportsViewProps): ReactElement
   };
 
   return (
-    <section className="workflow-stack">
-      <section className="card">
-        <div className="card-header">
+    <section className="flex flex-col gap-2 min-h-0">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Abuse report queue</h2>
             <p>Review conversation and message reports from users.</p>
@@ -59,17 +59,17 @@ export default function ReportsView({ reports }: ReportsViewProps): ReactElement
           message={status?.message ?? null}
         />
 
-        <div className="table-wrap">
-          <table className="data-table">
+        <div className="max-h-64 overflow-auto border rounded-md">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th scope="col">Status</th>
-                <th scope="col">Reported by</th>
-                <th scope="col">Participants</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Message</th>
-                <th scope="col">Created</th>
-                <th scope="col">Action</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Reported by</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Participants</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Reason</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Message</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -77,27 +77,27 @@ export default function ReportsView({ reports }: ReportsViewProps): ReactElement
                 <tr>
                   <td
                     colSpan={7}
-                    className="empty-row"
+                    className="text-muted-foreground text-center border-b px-2 py-1.5 text-left"
                   >
                     No reports in queue.
                   </td>
                 </tr>
               ) : (
                 reports.map((report) => (
-                  <tr key={report.id}>
-                    <td>{report.status}</td>
-                    <td>{report.reporterLabel}</td>
-                    <td>{report.participantsLabel}</td>
-                    <td>{report.reason}</td>
-                    <td>{report.messagePreview}</td>
-                    <td>{formatDateTime(report.createdAt)}</td>
-                    <td>
-                      <div className="button-row">
+                  <tr key={report.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left">{report.status}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{report.reporterLabel}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{report.participantsLabel}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{report.reason}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{report.messagePreview}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{formatDateTime(report.createdAt)}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <div className="flex items-center gap-1.5">
                         <Link
                           href={`/messages?conversationId=${report.conversationId}`}
-                          className="text-link"
+                          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80"
                         >
-                          <span className="icon-with-label">
+                          <span className="inline-flex items-center gap-1">
                             <FiExternalLink aria-hidden="true" />
                             <span>Open convo</span>
                           </span>

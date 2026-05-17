@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiTrash2 } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Modal from "@/app/ui/modal";
 import {
   getTaskActionData,
@@ -115,20 +116,19 @@ export default function TaskActionModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Actions: ${taskTitle}`}>
-      {/* Add action form */}
-      <div className="workflow-form" style={{ marginBottom: "0.75rem" }}>
-        <div className="field-wrap" style={{ flex: 1 }}>
+      <div className="flex items-end gap-2 mb-3">
+        <div className="flex flex-col gap-1 flex-1">
           <input
-            className="text-input"
+            className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
             value={actionName}
             onChange={(e) => setActionName(e.target.value)}
             disabled={isAddingAction || isLoading}
             placeholder="Action name"
           />
         </div>
-        <div className="field-wrap" style={{ flex: 1 }}>
+        <div className="flex flex-col gap-1 flex-1">
           <input
-            className="text-input"
+            className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
             value={actionDescription}
             onChange={(e) => setActionDescription(e.target.value)}
             disabled={isAddingAction || isLoading}
@@ -145,84 +145,66 @@ export default function TaskActionModal({
         </AppButton>
       </div>
 
-      {/* Actions list */}
       {isLoading ? (
-        <p className="empty-row">Loading actions...</p>
+        <p className="text-muted-foreground text-center py-2">Loading actions...</p>
       ) : actions.length === 0 ? (
-        <p className="empty-row">No actions yet.</p>
+        <p className="text-muted-foreground text-center py-2">No actions yet.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+        <div className="flex flex-col gap-1.5">
           {actions.map((act) => {
             const isDone = act.status === "completed";
             return (
               <div
                 key={act.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.6rem",
-                  padding: "0.55rem 0.7rem",
-                  border: "1px solid var(--border)",
-                  borderRadius: "0.6rem",
-                  background: "var(--surface)",
-                  opacity: isDone ? 0.65 : 1,
-                }}
+                className="flex items-center gap-2.5 p-2 rounded-lg bg-accent border"
+                style={{ opacity: isDone ? 0.65 : 1 }}
               >
-                <button
-                  onClick={() => void handleToggleStatus(act)}
-                  disabled={isTogglingStatusId === act.id}
-                  style={{
-                    width: "1.2rem",
-                    height: "1.2rem",
-                    border: `2px solid ${isDone ? "var(--success)" : "var(--border-strong)"}`,
-                    borderRadius: "0.25rem",
-                    background: isDone ? "var(--success)" : "transparent",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                  }}
-                  title={isDone ? "Mark pending" : "Mark completed"}
-                >
-                  {isDone && (
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5L4 7L8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => void handleToggleStatus(act)}
+                      disabled={isTogglingStatusId === act.id}
+                      className={`w-5 h-5 shrink-0 flex items-center justify-center p-0 rounded ${isDone ? "bg-green-500 border-2 border-green-500" : "bg-transparent border-2 border-border"}`}
+                    >
+                      {isDone && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5L4 7L8 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isDone ? "Mark pending" : "Mark completed"}</TooltipContent>
+                </Tooltip>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="flex-1 min-w-0">
                   <div
-                    style={{
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                      textDecoration: isDone ? "line-through" : "none",
-                      color: isDone ? "var(--text-muted)" : "var(--text-primary)",
-                    }}
+                    className={`font-semibold text-base ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}
                   >
                     {act.name}
                   </div>
                   {act.description && (
-                    <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "0.15rem" }}>
+                    <div className="text-sm text-muted-foreground mt-0.5">
                       {act.description}
                     </div>
                   )}
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     {act.authorLabel}
                   </div>
                 </div>
 
                 {act.isOwn && (
-                  <button
-                    onClick={() => void handleDeleteAction(act.id)}
-                    disabled={isDeletingActionId === act.id}
-                    className="slack-action-btn is-danger"
-                    title="Delete action"
-                  >
-                    <FiTrash2 size={14} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => void handleDeleteAction(act.id)}
+                        disabled={isDeletingActionId === act.id}
+                        className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-destructive cursor-pointer transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete action</TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             );

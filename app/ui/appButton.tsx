@@ -1,9 +1,10 @@
-import type { ButtonHTMLAttributes, ReactElement, ReactNode } from "react";
-import { cx } from "./cx";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
 
-interface AppButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface AppButtonProps {
   children: ReactNode;
   variant?: ButtonVariant;
   fullWidth?: boolean;
@@ -11,7 +12,18 @@ interface AppButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loadingLabel?: string;
   startIcon?: ReactNode;
   endIcon?: ReactNode;
+  type?: "button" | "submit" | "reset";
+  className?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  style?: CSSProperties;
 }
+
+const variantMap: Record<ButtonVariant, "default" | "secondary" | "ghost"> = {
+  primary: "default",
+  secondary: "secondary",
+  ghost: "ghost",
+};
 
 export default function AppButton({
   children,
@@ -24,28 +36,25 @@ export default function AppButton({
   startIcon,
   type = "button",
   variant = "primary",
-  ...props
+  onClick,
+  style,
 }: AppButtonProps): ReactElement {
   const isDisabled = disabled || isLoading;
   const buttonContent = isLoading ? (loadingLabel ?? "Working...") : children;
 
   return (
-    <button
+    <Button
       type={type}
-      className={cx(
-        "app-button",
-        `is-${variant}`,
-        fullWidth && "is-full-width",
-        className,
-      )}
+      variant={variantMap[variant]}
+      className={fullWidth ? `w-full ${className ?? ""}` : className}
       disabled={isDisabled}
-      {...props}
+      onClick={onClick}
+      style={style}
     >
-      <span className="app-button-content">
-        {!isLoading && startIcon ? <span className="button-icon">{startIcon}</span> : null}
-        <span>{buttonContent}</span>
-        {!isLoading && endIcon ? <span className="button-icon">{endIcon}</span> : null}
-      </span>
-    </button>
+      {isLoading ? <Loader2 className="animate-spin" /> : null}
+      {!isLoading && startIcon ? startIcon : null}
+      {buttonContent}
+      {!isLoading && endIcon ? endIcon : null}
+    </Button>
   );
 }

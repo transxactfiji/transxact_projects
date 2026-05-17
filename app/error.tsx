@@ -17,11 +17,11 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <section className="workflow-stack">
-      <div className="card" style={{ textAlign: "center", padding: "4rem 2rem", maxWidth: "480px", margin: "4rem auto" }}>
-        <FiAlertTriangle size={48} style={{ color: "var(--error)", marginBottom: "1rem" }} />
-        <h1 style={{ margin: "0 0 0.5rem" }}>Something went wrong</h1>
-        <p style={{ color: "var(--text-secondary)", margin: "0 0 1.5rem", lineHeight: 1.5 }}>
+    <section className="flex flex-col items-center justify-center p-4">
+      <div className="border rounded-lg bg-card shadow-card text-center py-16 px-8 max-w-[480px] my-16 mx-auto">
+        <FiAlertTriangle size={48} className="text-destructive mb-4" />
+        <h1 className="mb-2">Something went wrong</h1>
+        <p className="text-muted-foreground mb-6 leading-relaxed">
           An unexpected error occurred. Please try again or contact support if the problem persists.
         </p>
         <AppButton
@@ -31,7 +31,7 @@ export default function ErrorPage({
           Try Again
         </AppButton>
         {process.env.NODE_ENV === "development" && error.message && (
-          <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "1.5rem", textAlign: "left", wordBreak: "break-word" }}>
+          <p className="text-muted-foreground text-sm mt-6 text-left break-words">
             {error.message}
           </p>
         )}

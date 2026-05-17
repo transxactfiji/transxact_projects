@@ -1,5 +1,7 @@
 import type { InputHTMLAttributes, ReactElement } from "react";
-import { cx } from "./cx";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -21,16 +23,11 @@ export default function TextField({
   const noteId = hint || error ? `${id}-note` : undefined;
 
   return (
-    <div className={cx("field-wrap", containerClassName)}>
-      <label
-        htmlFor={id}
-        className="field-label"
-      >
-        {label}
-      </label>
-      <input
+    <div className={cn("flex flex-col gap-1.5", containerClassName)}>
+      <Label htmlFor={id}>{label}</Label>
+      <Input
         id={id}
-        className={cx("text-input", error && "is-invalid", className)}
+        className={cn(error && "border-destructive focus-visible:ring-destructive", className)}
         aria-invalid={Boolean(error)}
         aria-describedby={noteId}
         {...props}
@@ -38,7 +35,10 @@ export default function TextField({
       {noteId ? (
         <p
           id={noteId}
-          className={cx("field-note", error && "is-error")}
+          className={cn(
+            "text-sm",
+            error ? "text-destructive" : "text-muted-foreground"
+          )}
         >
           {error ?? hint}
         </p>

@@ -15,10 +15,11 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { Spinner } from "@/app/ui/loading";
 import Modal from "@/app/ui/modal";
-import { statusBadgeMap, roleBadgeMap } from "@/app/ui/formStatus";
+import { statusBadgeClassMap, roleBadgeClassMap } from "@/app/ui/formStatus";
 
 interface User {
   id: number;
@@ -222,14 +223,14 @@ export function AdminUsersList() {
   };
 
   return (
-    <section className="workflow-stack">
-      <div className="card">
-        <div className="card-header">
+    <section className="flex flex-col gap-2 min-h-0">
+      <div className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>User Management</h2>
             <p>Manage system users, roles, and permissions</p>
           </div>
-          <div className="card-controls">
+          <div className="flex items-center gap-1.5">
             <AppButton
               variant="primary"
               onClick={() => {
@@ -245,10 +246,10 @@ export function AdminUsersList() {
           </div>
         </div>
 
-        <div className="workflow-form">
-          <div style={{ position: "relative", flex: 1 }}>
+        <div className="flex items-end gap-2 mb-2">
+          <div className="relative flex-1">
             <FiSearch
-              style={{ position: "absolute", left: "0.66rem", top: "0.6rem", color: "var(--text-muted)" }}
+              className="absolute left-2.5 top-2.5 text-muted-foreground"
               size={18}
             />
             <input
@@ -259,8 +260,7 @@ export function AdminUsersList() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="filter-input"
-              style={{ paddingLeft: "2.2rem", width: "100%" }}
+              className="min-w-40 border rounded-md bg-accent text-foreground text-sm pl-9 pr-2 py-1.5 transition-colors focus:border-primary w-full"
             />
           </div>
 
@@ -270,7 +270,7 @@ export function AdminUsersList() {
               setRoleFilter(e.target.value as "" | "admin" | "member");
               setPage(1);
             }}
-            className="filter-input"
+            className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
           >
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
@@ -283,7 +283,7 @@ export function AdminUsersList() {
               setStatusFilter(e.target.value as "" | "active" | "inactive" | "pending");
               setPage(1);
             }}
-            className="filter-input"
+            className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
           >
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -300,83 +300,88 @@ export function AdminUsersList() {
           </AppButton>
         </div>
 
-        <div className="pagination-info">
+        <div className="text-muted-foreground text-sm">
           <span>Showing <strong>{users.length}</strong> of <strong>{total}</strong> users</span>
         </div>
       </div>
 
       {loading ? (
-          <div className="card" style={{ textAlign: "center", padding: "3rem 1rem" }}>
-            <div style={{ marginBottom: "0.75rem" }}>
+          <div className="rounded-lg border bg-card shadow-card text-center py-12 px-4">
+            <div className="mb-3">
               <Spinner />
             </div>
-          <p className="empty-row">Loading users...</p>
+          <p className="text-muted-foreground text-center">Loading users...</p>
         </div>
       ) : users.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "3rem 1rem" }}>
-          <p className="empty-row">No users found</p>
+        <div className="rounded-lg border bg-card shadow-card text-center py-12 px-4">
+          <p className="text-muted-foreground text-center">No users found</p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0 }}>
-          <div className="table-wrap" style={{ maxHeight: "none" }}>
-            <table className="data-table">
+        <div className="rounded-lg border bg-card shadow-card p-0">
+          <div className="max-h-[none] overflow-auto border rounded-md">
+            <table className="w-full border-collapse text-sm">
               <thead>
                 <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Last Login</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Name</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Email</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Role</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Last Login</th>
+                  <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="workflow-title">{user.name || "\u2014"}</td>
-                    <td>{user.email}</td>
-                    <td>
+                  <tr key={user.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left font-semibold">{user.name || "\u2014"}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{user.email}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
                       <span
-                        className="workflow-status-pill"
-                        style={{ ...roleBadgeMap[user.role], border: "none" }}
+                        className={`inline-flex items-center border-none rounded-full text-xs font-semibold px-1.5 py-0.5 ${roleBadgeClassMap[user.role] ?? "bg-accent text-muted-foreground"}`}
                       >
                         {user.role}
                       </span>
                     </td>
-                    <td>
+                    <td className="border-b px-2 py-1.5 text-left">
                       <span
-                        className="workflow-status-pill"
-                        style={{ ...statusBadgeMap[user.status], border: "none" }}
+                        className={`inline-flex items-center border-none rounded-full text-xs font-semibold px-1.5 py-0.5 ${statusBadgeClassMap[user.status] ?? "bg-accent text-muted-foreground"}`}
                       >
                         {user.status}
                       </span>
                     </td>
-                    <td>
+                    <td className="border-b px-2 py-1.5 text-left">
                       {user.lastLoginAt
                         ? new Date(user.lastLoginAt).toLocaleDateString()
                         : "Never"}
                     </td>
-                    <td>
-                      <div className="button-row">
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="text-link"
-                          title="Edit user"
-                        >
-                          <span className="icon-with-label">
-                            <FiEdit2 /> Edit
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-link"
-                          style={{ color: "var(--error)" }}
-                          title="Delete user"
-                        >
-                          <span className="icon-with-label">
-                            <FiTrash2 /> Delete
-                          </span>
-                        </button>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <div className="flex items-center gap-1.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                <FiEdit2 /> Edit
+                              </span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit user</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="inline-flex items-center gap-1 border-0 bg-transparent text-destructive cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-destructive/80"
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                <FiTrash2 /> Delete
+                              </span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete user</TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
@@ -385,31 +390,25 @@ export function AdminUsersList() {
             </table>
           </div>
 
-          <div className="pagination-bar">
-            <span className="pagination-info">
+          <div className="flex items-center justify-between border-t bg-accent px-2 py-1.5">
+            <span className="text-muted-foreground text-sm">
               Page <strong>{page}</strong> of <strong>{totalPages}</strong>
             </span>
-            <div className="button-row">
-              <button
+            <div className="flex items-center gap-1.5">
+              <AppButton
+                variant="ghost"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="app-button is-ghost"
-                title="Previous page"
               >
-                <span className="app-button-content">
-                  <FiChevronLeft />
-                </span>
-              </button>
-              <button
+                <FiChevronLeft />
+              </AppButton>
+              <AppButton
+                variant="ghost"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="app-button is-ghost"
-                title="Next page"
               >
-                <span className="app-button-content">
-                  <FiChevronRight />
-                </span>
-              </button>
+                <FiChevronRight />
+              </AppButton>
             </div>
           </div>
         </div>
@@ -423,12 +422,12 @@ export function AdminUsersList() {
         }}
         title="Invite New User"
       >
-        <div className="form-stack" style={{ marginTop: 0 }}>
-          <div className="field-wrap">
-            <label htmlFor="invite-email" className="field-label">Email Address</label>
-            <div style={{ position: "relative" }}>
+        <div className="mt-0 flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="invite-email" className="text-sm font-semibold text-muted-foreground">Email Address</label>
+            <div className="relative">
               <FiMail
-                style={{ position: "absolute", left: "0.72rem", top: "0.7rem", color: "var(--text-muted)" }}
+                className="absolute left-3 top-[0.7rem] text-muted-foreground"
               />
               <input
                 id="invite-email"
@@ -436,25 +435,24 @@ export function AdminUsersList() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="user@example.com"
-                className="text-input"
-                style={{ paddingLeft: "2.2rem" }}
+                className="w-full border rounded-md bg-accent text-foreground text-sm pl-9 pr-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 required
               />
             </div>
           </div>
 
-          <div className="field-wrap">
-            <label htmlFor="invite-role" className="field-label">Role</label>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="invite-role" className="text-sm font-semibold text-muted-foreground">Role</label>
             <select
               id="invite-role"
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as "admin" | "member")}
-              className="filter-input"
+              className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
             >
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
-            <p className="field-note">
+            <p className="text-xs text-muted-foreground">
               {inviteRole === "admin"
                 ? "Admins can manage users and system settings"
                 : "Members have basic access to projects and tasks"}
@@ -488,50 +486,50 @@ export function AdminUsersList() {
         title={editingUser ? `Edit ${editingUser.name || editingUser.email}` : "Edit User"}
       >
         {editingUser && (
-          <div className="form-stack" style={{ marginTop: 0 }}>
-            <div className="field-wrap">
-              <label className="field-label">Name</label>
-              <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+          <div className="mt-0 flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Name</label>
+              <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                 {editingUser.name || "\u2014"}
               </p>
             </div>
 
-            <div className="field-wrap">
-              <label className="field-label">Email</label>
-              <p className="text-input" style={{ cursor: "default", background: "var(--surface-muted)" }}>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-muted-foreground">Email</label>
+              <p className="w-full border rounded-md bg-muted text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground cursor-default">
                 {editingUser.email}
               </p>
             </div>
 
-            <div className="field-wrap">
-              <label htmlFor="edit-role" className="field-label">Role</label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-role" className="text-sm font-semibold text-muted-foreground">Role</label>
               <select
                 id="edit-role"
                 value={editRole}
                 onChange={(e) => setEditRole(e.target.value as "admin" | "member")}
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
               >
                 <option value="admin">Admin</option>
                 <option value="member">Member</option>
               </select>
-              <p className="field-note">
+              <p className="text-xs text-muted-foreground">
                 Current: <strong>{editingUser.role}</strong>
               </p>
             </div>
 
-            <div className="field-wrap">
-              <label htmlFor="edit-status" className="field-label">Status</label>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="edit-status" className="text-sm font-semibold text-muted-foreground">Status</label>
               <select
                 id="edit-status"
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as "active" | "inactive" | "pending")}
-                className="filter-input"
+                className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="pending">Pending</option>
               </select>
-              <p className="field-note">
+              <p className="text-xs text-muted-foreground">
                 Current: <strong>{editingUser.status}</strong>
               </p>
             </div>

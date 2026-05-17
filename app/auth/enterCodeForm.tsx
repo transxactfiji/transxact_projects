@@ -73,7 +73,7 @@ export default function EnterCodeForm(props: EnterCodeFormProps): ReactElement {
   return (
     <form
       onSubmit={handleSubmit}
-      className="form-stack"
+      className="mt-2.5 flex flex-col gap-2"
     >
       <TextField
         id="code"
@@ -99,7 +99,7 @@ export default function EnterCodeForm(props: EnterCodeFormProps): ReactElement {
         message={status?.message ?? null}
       />
 
-      <div className="button-row">
+      <div className="flex items-center gap-1.5">
         <AppButton
           type="submit"
           isLoading={isSubmitting}

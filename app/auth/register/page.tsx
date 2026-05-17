@@ -15,8 +15,8 @@ export default async function RegisterPage(
   const token = params.token ?? null;
   if (!token) {
     return (
-      <section className="auth-card">
-        <h1 className="icon-with-label">
+      <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
+        <h1 className="inline-flex items-center gap-1">
           <FiShield aria-hidden="true" />
           <span>Invalid invite link</span>
         </h1>
@@ -26,9 +26,9 @@ export default async function RegisterPage(
         />
         <Link
           href="/auth"
-          className="text-link"
+          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80"
         >
-          <span className="icon-with-label">
+          <span className="inline-flex items-center gap-1">
             <FiArrowLeft aria-hidden="true" />
             <span>Return to login</span>
           </span>
@@ -38,12 +38,12 @@ export default async function RegisterPage(
   }
 
   return (
-    <section className="auth-card">
-      <h1 className="icon-with-label">
+    <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
+      <h1 className="inline-flex items-center gap-1">
         <FiShield aria-hidden="true" />
         <span>Complete your account setup</span>
       </h1>
-      <p className="auth-description">
+      <p className="mt-1 text-muted-foreground text-sm">
         Add your details to activate your workspace access.
       </p>
       <RegisterForm token={token} />

@@ -21,6 +21,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { getInitials, getAvatarColorByUserId } from "@/lib/utils";
 import { MESSAGE_AVATAR_COLORS } from "@/lib/constants";
@@ -70,6 +71,11 @@ function formatFullDateTime(isoValue: string): string {
   if (Number.isNaN(parsed.getTime())) return "";
   return parsed.toLocaleString();
 }
+
+const channelBtnClass = "inline-flex items-center justify-center w-7 h-7 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground";
+const channelBtnDangerClass = "inline-flex items-center justify-center w-7 h-7 border-0 rounded bg-transparent text-destructive cursor-pointer transition-colors hover:bg-accent hover:text-foreground";
+const actionBtnClass = "inline-flex items-center justify-center w-6 h-6 rounded border-0 bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground";
+const actionBtnDangerClass = "inline-flex items-center justify-center w-6 h-6 rounded border-0 bg-transparent text-destructive cursor-pointer transition-colors hover:bg-destructive/10";
 
 export default function MessagesView({
   currentUserRole,
@@ -333,14 +339,13 @@ export default function MessagesView({
   };
 
   return (
-    <section className="discord-layout">
-      <aside className="discord-sidebar">
-        <div className="discord-sidebar-header">
-          <div className="discord-new-conv">
-            <div className="combobox-wrap" style={{ flex: 1, minWidth: 0 }} ref={userSearchRef}>
+    <section className="flex border rounded-md overflow-hidden bg-card h-[calc(100dvh-6.5rem)]">
+      <aside className="w-68 min-w-68 flex flex-col border-r bg-accent">
+        <div className="p-2 border-b">
+          <div className="flex gap-1">
+            <div className="relative flex-1 min-w-0" ref={userSearchRef}>
               <input
-                className="text-input"
-                style={{ width: "100%" }}
+                className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground w-full"
                 value={userSearchQuery}
                 onChange={(e) => handleUserSearchInput(e.target.value)}
                 onFocus={() => {
@@ -350,23 +355,23 @@ export default function MessagesView({
                 disabled={isCreatingConversation}
               />
               {showUserDropdown && (
-                <div className="combobox-list">
+                <div className="absolute top-full left-0 right-0 z-40 max-h-48 overflow-y-auto border rounded-md bg-card shadow-elevated mt-1">
                   {isSearchingUsers ? (
-                    <div className="combobox-empty">Searching...</div>
+                    <div className="p-2 text-sm text-muted-foreground text-center">Searching...</div>
                   ) : userSearchResults.length === 0 ? (
-                    <div className="combobox-empty">
+                    <div className="p-2 text-sm text-muted-foreground text-center">
                       {userSearchQuery.trim() ? "No users found" : "Type to search users"}
                     </div>
                   ) : (
                     userSearchResults.map((user, index) => (
                       <div
                         key={user.id}
-                        className={`combobox-option ${index === highlightedIndex ? "is-highlighted" : ""}`}
+                        className={`px-2 py-1.5 text-sm cursor-pointer transition-colors hover:bg-accent flex items-center gap-1.5 ${index === highlightedIndex ? "bg-accent" : ""}`}
                         onClick={() => selectUser(user)}
                         onMouseEnter={() => setHighlightedIndex(index)}
                       >
                         <div
-                          className="discord-conv-avatar"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 leading-none"
                           style={{ backgroundColor: getAvatarColorByUserId(user.id, MESSAGE_AVATAR_COLORS) }}
                         >
                           {getInitials(user.label)}
@@ -391,10 +396,9 @@ export default function MessagesView({
           {currentUserRole === "admin" ? (
             <Link
               href="/admin/reports"
-              className="text-link"
-              style={{ marginTop: "0.35rem", display: "inline-flex", fontSize: "0.8rem" }}
+              className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 mt-1.5 inline-flex text-sm"
             >
-              <span className="icon-with-label">
+              <span className="inline-flex items-center gap-1">
                 <FiFlag aria-hidden="true" />
                 <span>Review reports</span>
               </span>
@@ -402,15 +406,14 @@ export default function MessagesView({
           ) : null}
         </div>
 
-        <div style={{ padding: "0.2rem 0.45rem 0" }}>
-          <div style={{ position: "relative" }}>
+        <div className="px-1.5 pt-1">
+          <div className="relative">
             <FiSearch
               size={14}
-              style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
             />
             <input
-              className="text-input"
-              style={{ paddingLeft: "1.8rem", width: "100%", fontSize: "0.72rem" }}
+              className="w-full border rounded-md bg-accent text-foreground text-sm pl-7 pr-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground text-xs w-full"
               value={convSearch}
               onChange={(e) => setConvSearch(e.target.value)}
               placeholder="Search conversations..."
@@ -418,12 +421,12 @@ export default function MessagesView({
           </div>
         </div>
 
-        <div className="discord-conv-list">
+        <div className="flex-1 overflow-y-auto p-1">
           {filteredConversations.length === 0 ? (
-            <div className="discord-conv-empty">
+            <div className="flex flex-col items-center gap-1.5 py-6 px-3 text-muted-foreground text-sm text-center">
               <FiMessageSquare size={28} aria-hidden="true" />
               <span>No conversations yet.</span>
-              <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+              <span className="text-xs text-muted-foreground">
                 Search for a user above to start one.
               </span>
             </div>
@@ -431,21 +434,21 @@ export default function MessagesView({
             filteredConversations.map((item) => (
               <div
                 key={item.conversationId}
-                className={`discord-conv-item ${item.conversationId === activeConversationId ? "is-active" : ""}`}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors hover:bg-muted ${item.conversationId === activeConversationId ? "bg-primary/10" : ""}`}
                 onClick={() => openConversation(item.conversationId)}
               >
                 <div
-                  className="discord-conv-avatar"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 leading-none"
                   style={{ backgroundColor: getAvatarColorByUserId(item.participantUserId, MESSAGE_AVATAR_COLORS) }}
                 >
                   {getInitials(item.participantLabel)}
                 </div>
-                <div className="discord-conv-info">
-                  <div className="discord-conv-name">{item.participantLabel}</div>
-                  <div className="discord-conv-preview">{item.lastMessagePreview}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold overflow-hidden text-ellipsis whitespace-nowrap">{item.participantLabel}</div>
+                  <div className="text-xs text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap mt-0.5">{item.lastMessagePreview}</div>
                 </div>
                 {item.unreadCount > 0 ? (
-                  <div className="discord-conv-unread">
+                  <div className="inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold px-1 leading-none shrink-0">
                     {item.unreadCount > 99 ? "99+" : item.unreadCount}
                   </div>
                 ) : null}
@@ -455,78 +458,89 @@ export default function MessagesView({
         </div>
       </aside>
 
-      <main className="discord-main">
+      <main className="flex-1 flex flex-col min-w-0">
         {!activeConversation ? (
-          <div className="discord-no-channel">
-            <span style={{ textAlign: "center", maxWidth: "20rem" }}>
-              <FiMessageSquare size={32} style={{ display: "block", margin: "0 auto 0.5rem", opacity: 0.4 }} aria-hidden="true" />
+          <div className="flex items-center justify-center flex-1 text-muted-foreground text-sm">
+            <span className="text-center max-w-80">
+              <FiMessageSquare size={32} className="block mx-auto mb-2 opacity-40" aria-hidden="true" />
               Select a conversation or start a new one
             </span>
           </div>
         ) : (
           <>
-            <header className="discord-channel-header">
+            <header className="flex items-center justify-between gap-1.5 px-2.5 py-2 border-b min-h-10">
               <h2>
-                <FiMessageSquare size={16} style={{ marginRight: "0.35rem", verticalAlign: "middle", opacity: 0.6 }} aria-hidden="true" />
+                <FiMessageSquare size={16} className="inline-block mr-1.5 align-middle opacity-60" aria-hidden="true" />
                 {activeConversation.participantLabel}
               </h2>
-              <div className="discord-channel-actions">
-                <button
-                  className="discord-channel-btn"
-                  onClick={() => void handleArchiveConversation()}
-                  title="Archive conversation"
-                >
-                  <FiArchive aria-hidden="true" />
-                </button>
-                <button
-                  className="discord-channel-btn"
-                  onClick={() => void handleBlockToggle()}
-                  title={activeConversation.isBlockedByCurrentUser ? "Unblock user" : "Block user"}
-                >
-                  {activeConversation.isBlockedByCurrentUser ? (
-                    <FiUserCheck aria-hidden="true" />
-                  ) : (
-                    <FiUserX aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  className="discord-channel-btn is-danger"
-                  onClick={() => void handleReportConversation()}
-                  title="Report conversation"
-                >
-                  <FiFlag aria-hidden="true" />
-                </button>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={channelBtnClass}
+                      onClick={() => void handleArchiveConversation()}
+                    >
+                      <FiArchive aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Archive conversation</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={channelBtnClass}
+                      onClick={() => void handleBlockToggle()}
+                    >
+                      {activeConversation.isBlockedByCurrentUser ? (
+                        <FiUserCheck aria-hidden="true" />
+                      ) : (
+                        <FiUserX aria-hidden="true" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{activeConversation.isBlockedByCurrentUser ? "Unblock user" : "Block user"}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={channelBtnDangerClass}
+                      onClick={() => void handleReportConversation()}
+                    >
+                      <FiFlag aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Report conversation</TooltipContent>
+                </Tooltip>
               </div>
             </header>
 
-            <div className="discord-status">
+            <div className="px-2.5 pt-1.5">
               <InlineStatus
                 tone={status?.tone ?? "info"}
                 message={status?.message ?? null}
               />
             </div>
 
-            <div className="discord-messages-wrap">
+            <div className="flex-1 overflow-y-auto flex flex-col">
               {activeConversation.messages.length === 0 ? (
-                <div className="discord-no-messages">
+                <div className="flex items-center justify-center py-8 px-3 text-muted-foreground text-sm">
                   No messages yet. Say hello!
                 </div>
               ) : (
-                <div className="discord-messages">
+                <div className="py-0.5 flex-1">
                   {activeConversation.messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`discord-msg${message.isOwn ? " is-own" : ""}`}
+                      className="flex flex-col gap-0.5 px-3 py-1 relative transition-colors hover:bg-accent group"
                     >
                       {editingMessageId === message.id ? (
-                        <div className="discord-msg-edit">
+                        <div className="flex flex-col gap-1.5">
                           <textarea
-                            className="text-input"
+                            className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-12 resize-y"
                             value={editingBody}
                             onChange={(event) => setEditingBody(event.target.value)}
-                            style={{ minHeight: "3rem", resize: "vertical" }}
                           />
-                          <div className="button-row">
+                          <div className="flex items-center gap-1.5">
                             <AppButton
                               variant="secondary"
                               onClick={() => void handleSaveEdit()}
@@ -547,55 +561,67 @@ export default function MessagesView({
                           </div>
                         </div>
                       ) : (
-                        <div className="discord-msg-body">
+                        <div className={`bg-muted rounded-md p-2 self-start max-w-[75%] ${message.isOwn ? "bg-primary/10 self-end" : ""}`}>
                           <p>{message.body}</p>
                         </div>
                       )}
 
                       {editingMessageId !== message.id ? (
-                        <div className="discord-msg-footer">
-                          <span className="discord-msg-time" title={formatFullDateTime(message.createdAt)}>
+                        <div className={`flex items-center gap-1 self-start px-1 ${message.isOwn ? "self-end" : ""}`}>
+                          <span className="text-xs text-muted-foreground" title={formatFullDateTime(message.createdAt)}>
                             {formatTime(message.createdAt)}
                           </span>
                           {message.isEdited && !message.isDeleted ? (
-                            <span className="discord-msg-tag">edited</span>
+                            <span className="text-xs text-muted-foreground">edited</span>
                           ) : null}
                           {message.isOwn && message.readByOtherUser ? (
-                            <span className="discord-msg-tag is-read">· read</span>
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400">· read</span>
                           ) : null}
                         </div>
                       ) : null}
 
-                      <div className="discord-msg-actions">
+                      <div className="flex gap-0.5 opacity-0 transition-opacity absolute -top-2 right-3 bg-card border rounded-md p-0.5 shadow-card group-hover:opacity-100">
                         {message.isOwn && !message.isDeleted ? (
                           <>
-                            <button
-                              type="button"
-                              className="slack-action-btn"
-                              onClick={() => beginEditingMessage(message.id, message.body)}
-                              title="Edit"
-                            >
-                              <FiEdit2 size={14} aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              className="slack-action-btn is-danger"
-                              onClick={() => void handleDeleteMessage(message.id)}
-                              title="Delete"
-                            >
-                              <FiTrash2 size={14} aria-hidden="true" />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className={actionBtnClass}
+                                  onClick={() => beginEditingMessage(message.id, message.body)}
+                                >
+                                  <FiEdit2 size={14} aria-hidden="true" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className={actionBtnDangerClass}
+                                  onClick={() => void handleDeleteMessage(message.id)}
+                                >
+                                  <FiTrash2 size={14} aria-hidden="true" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
                           </>
                         ) : null}
                         {!message.isDeleted ? (
-                          <button
-                            type="button"
-                            className="slack-action-btn is-danger"
-                            onClick={() => void handleReportMessage(message.id)}
-                            title="Report"
-                          >
-                            <FiFlag size={14} aria-hidden="true" />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className={actionBtnDangerClass}
+                                onClick={() => void handleReportMessage(message.id)}
+                              >
+                                <FiFlag size={14} aria-hidden="true" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Report</TooltipContent>
+                          </Tooltip>
                         ) : null}
                       </div>
                     </div>
@@ -605,8 +631,8 @@ export default function MessagesView({
               )}
             </div>
 
-            <div className="discord-input-wrap">
-              <div className="slack-input-bar">
+            <div className="px-2.5 py-2 border-t">
+              <div className="flex items-end gap-1.5">
                 <textarea
                   ref={textareaRef}
                   value={messageBody}
@@ -622,6 +648,7 @@ export default function MessagesView({
                       : "Messaging is blocked"
                   }
                   rows={1}
+                  className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 />
                 <AppButton
                   variant="primary"

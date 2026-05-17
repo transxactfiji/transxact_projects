@@ -6,7 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import ThemeToggle from "./themeToggle";
 import InboxControls from "./inboxControls";
 import LogoutButton from "./logoutButton";
-import { cx } from "./cx";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ReactElement, ReactNode } from "react";
 import {
   FiAlertTriangle,
@@ -55,15 +56,24 @@ const NAV_ITEMS: NavItem[] = [
 function resolvePageMeta(pathname: string): PageMeta {
   if (pathname === "/") return { title: "Dashboard", icon: FiHome };
   if (pathname === "/auth") return { title: "Login", icon: FiShield };
-  if (pathname.startsWith("/projects")) return { title: "Project workflow", icon: FiFolder };
-  if (pathname.startsWith("/tasks")) return { title: "Task workflow", icon: FiClipboard };
-  if (pathname.startsWith("/issues")) return { title: "Issue workflow", icon: FiAlertTriangle };
-  if (pathname.startsWith("/messages")) return { title: "Direct messages", icon: FiMessageSquare };
-  if (pathname.startsWith("/notifications")) return { title: "Notification center", icon: FiBell };
-  if (pathname.startsWith("/admin/users")) return { title: "User Management", icon: FiShield };
-  if (pathname.startsWith("/admin/reports")) return { title: "Abuse reports", icon: FiShield };
-  if (pathname.startsWith("/auth/register")) return { title: "Complete account setup", icon: FiShield };
-  if (pathname.startsWith("/profile")) return { title: "Profile", icon: FiUser };
+  if (pathname.startsWith("/projects"))
+    return { title: "Project workflow", icon: FiFolder };
+  if (pathname.startsWith("/tasks"))
+    return { title: "Task workflow", icon: FiClipboard };
+  if (pathname.startsWith("/issues"))
+    return { title: "Issue workflow", icon: FiAlertTriangle };
+  if (pathname.startsWith("/messages"))
+    return { title: "Direct messages", icon: FiMessageSquare };
+  if (pathname.startsWith("/notifications"))
+    return { title: "Notification center", icon: FiBell };
+  if (pathname.startsWith("/admin/users"))
+    return { title: "User Management", icon: FiShield };
+  if (pathname.startsWith("/admin/reports"))
+    return { title: "Abuse reports", icon: FiShield };
+  if (pathname.startsWith("/auth/register"))
+    return { title: "Complete account setup", icon: FiShield };
+  if (pathname.startsWith("/profile"))
+    return { title: "Profile", icon: FiUser };
   return { title: "Transxact Projects", icon: FiHome };
 }
 
@@ -118,7 +128,10 @@ function resolveBreadcrumbs(pathname: string): BreadcrumbItem[] {
     } else if (segments.length >= 3) {
       crumbs.push({ label: `User #${segments[2]}` });
     } else {
-      crumbs[crumbs.length - 1] = { label: "User Management", href: "/admin/users" };
+      crumbs[crumbs.length - 1] = {
+        label: "User Management",
+        href: "/admin/users",
+      };
     }
     return crumbs;
   }
@@ -167,96 +180,164 @@ export default function AppFrame({ children }: AppFrameProps): ReactElement {
 
   if (isAuthRoute) {
     return (
-      <div className="auth-shell">
-        <header className="auth-topbar">
-          <Link href="/" className="brand-link">
+      <div className="min-h-dvh bg-background">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/30 bg-card px-3 py-2 min-h-11">
+          <Link
+            href="/"
+            className="text-base font-bold tracking-tight"
+          >
             Transxact Projects
           </Link>
           <ThemeToggle />
         </header>
-        <main className="auth-content">{children}</main>
+        <main className="flex justify-center p-6">{children}</main>
       </div>
     );
   }
 
+  const sidebarClasses = `sticky top-0 flex flex-col items-center gap-2.5 border-r border-border/30 bg-card h-dvh px-1.5 py-2 overflow-x-hidden group${sidebarExpanded ? " is-expanded w-48" : ""}`;
+
   return (
-    <div className={cx("app-shell", sidebarExpanded && "has-expanded-sidebar")}>
-      <aside className={cx("sidebar", sidebarExpanded && "is-expanded")}>
-        <button
-          className="sidebar-toggle"
-          onClick={() => setSidebarExpanded((v) => !v)}
-          aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
-          title={sidebarExpanded ? "Collapse" : "Expand"}
+    <div
+      className="grid min-h-dvh"
+      style={{
+        gridTemplateColumns: sidebarExpanded ? "12rem 1fr" : "3rem 1fr",
+      }}
+    >
+      <aside className={sidebarClasses}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mb-2 self-end"
+              onClick={() => setSidebarExpanded((v) => !v)}
+              aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {sidebarExpanded ? (
+                <FiChevronLeft size={14} />
+              ) : (
+                <FiChevronRight size={14} />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {sidebarExpanded ? "Collapse" : "Expand"}
+          </TooltipContent>
+        </Tooltip>
+        <nav
+          className="flex flex-col items-center gap-0.5"
+          aria-label="Primary navigation"
         >
-          {sidebarExpanded ? <FiChevronLeft size={14} /> : <FiChevronRight size={14} />}
-        </button>
-        <nav className="side-nav" aria-label="Primary navigation">
           {NAV_ITEMS.map((item) => {
             const isActive =
-              item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+              item.href === "/"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
             const NavIcon = item.icon;
+            const linkClasses = `inline-flex gap-2 items-center justify-center rounded-md p-2 text-muted-foreground text-sm relative transition-colors hover:bg-accent hover:text-foreground group-[.is-expanded]:w-full group-[.is-expanded]:justify-start group-[.is-expanded]:px-2.5 group-[.is-expanded]:gap-2${isActive ? " bg-primary/10 text-primary" : ""}`;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cx("side-link", isActive && "is-active")}
-                title={item.label}
-              >
-                <NavIcon className="side-link-icon" size={18} aria-hidden="true" />
-                <span className="side-link-label">{item.label}</span>
-                {item.href === "/messages" && unreadMsgCount > 0 ? (
-                  <span className="side-link-badge">
-                    {unreadMsgCount > 99 ? "99+" : unreadMsgCount}
-                  </span>
-                ) : null}
-              </Link>
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={linkClasses}
+                  >
+                    <NavIcon
+                      className="shrink-0"
+                      size={18}
+                      aria-hidden="true"
+                    />
+                    <span className="hidden text-sm font-semibold whitespace-nowrap group-[.is-expanded]:inline">
+                      {item.label}
+                    </span>
+                    {item.href === "/messages" && unreadMsgCount > 0 ? (
+                      <span className="inline-flex items-center justify-center min-w-4 rounded-full bg-primary text-primary-foreground text-xs font-bold px-1 py-0.5 leading-none">
+                        {unreadMsgCount > 99 ? "99+" : unreadMsgCount}
+                      </span>
+                    ) : null}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
             );
           })}
         </nav>
       </aside>
 
-      <div className="workspace">
-        <header className="topbar">
+      <div className="flex flex-col min-w-0">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/30 bg-card px-3 py-2 min-h-11">
           <div>
-            <div className="eyebrow">
+            <div className="min-h-4">
               {breadcrumbs.length > 1 && (
-                <nav className="breadcrumbs" aria-label="Breadcrumb">
+                <nav
+                  className="flex items-center gap-1 text-xs"
+                  aria-label="Breadcrumb"
+                >
                   {breadcrumbs.map((crumb, index) => (
                     <span key={crumb.label}>
                       {index > 0 && (
-                        <span className="breadcrumb-separator" aria-hidden="true">
+                        <span
+                          className="text-muted-foreground"
+                          aria-hidden="true"
+                        >
                           /
                         </span>
                       )}
                       {crumb.href && index < breadcrumbs.length - 1 ? (
-                        <Link href={crumb.href} className="breadcrumb-link">
+                        <Link
+                          href={crumb.href}
+                          className="text-muted-foreground font-medium hover:text-primary transition-colors"
+                        >
                           {crumb.label}
                         </Link>
                       ) : index === breadcrumbs.length - 1 ? (
-                        <span className="breadcrumb-current">{crumb.label}</span>
+                        <span className="text-foreground/70 font-semibold">
+                          {crumb.label}
+                        </span>
                       ) : (
-                        <span className="breadcrumb-link">{crumb.label}</span>
+                        <span className="text-muted-foreground font-medium">
+                          {crumb.label}
+                        </span>
                       )}
                     </span>
                   ))}
                 </nav>
               )}
             </div>
-            <h1 className="page-title">
-              <PageIcon className="page-title-icon" size={16} aria-hidden="true" />
+            <h1 className="inline-flex items-center gap-1.5 text-base font-semibold">
+              <PageIcon
+                className="shrink-0"
+                size={16}
+                aria-hidden="true"
+              />
               <span>{pageMeta.title}</span>
             </h1>
           </div>
-          <div className="topbar-actions">
+          <div className="flex items-center gap-1.5">
             <InboxControls />
-            <Link href="/profile" className="topbar-icon-btn" aria-label="Profile" title="Profile">
-              <FiUser size={15} aria-hidden="true" />
-            </Link>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center justify-center gap-1 border rounded-md bg-accent text-muted-foreground cursor-pointer text-sm font-semibold min-h-7 px-2 py-1 transition-colors hover:border-border hover:text-foreground"
+                  aria-label="Profile"
+                >
+                  <FiUser
+                    size={15}
+                    aria-hidden="true"
+                  />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>Profile</TooltipContent>
+            </Tooltip>
             <LogoutButton />
             <ThemeToggle />
           </div>
         </header>
-        <main className="workspace-main">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 p-2.5 max-w-7xl w-full mx-auto">
+          {children}
+        </main>
       </div>
     </div>
   );

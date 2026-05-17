@@ -6,6 +6,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { FiArchive, FiEdit2, FiEye, FiEyeOff, FiPlus, FiRotateCcw, FiX } from "react-icons/fi";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
@@ -194,26 +195,26 @@ export default function ProjectsWorkflowView({
   };
 
   return (
-    <section className="workflow-stack">
-      <div className="kpi-grid">
-        <article className="kpi-card">
-          <p className="kpi-label">Active projects</p>
-          <p className="kpi-value">{projects.length}</p>
+    <section className="flex flex-col gap-2 min-h-0">
+      <div className="grid gap-2 grid-cols-3">
+        <article className="border rounded-lg bg-card shadow-card p-2.5">
+          <p className="text-muted-foreground text-xs font-medium">Active projects</p>
+          <p className="mt-1 text-xl font-bold">{projects.length}</p>
         </article>
-        <article className="kpi-card">
-          <p className="kpi-label">Tracked tasks</p>
-          <p className="kpi-value">{summary.totalTasks}</p>
+        <article className="border rounded-lg bg-card shadow-card p-2.5">
+          <p className="text-muted-foreground text-xs font-medium">Tracked tasks</p>
+          <p className="mt-1 text-xl font-bold">{summary.totalTasks}</p>
         </article>
-        <article className="kpi-card">
-          <p className="kpi-label">Open issues</p>
-          <p className="kpi-value">{summary.totalOpenIssues}</p>
+        <article className="border rounded-lg bg-card shadow-card p-2.5">
+          <p className="text-muted-foreground text-xs font-medium">Open issues</p>
+          <p className="mt-1 text-xl font-bold">{summary.totalOpenIssues}</p>
         </article>
       </div>
 
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <h2>Project workflow board</h2>
-          <div className="card-controls">
+          <div className="flex items-center gap-1.5">
             <AppButton
               onClick={handleShowArchived}
               variant="ghost"
@@ -230,36 +231,35 @@ export default function ProjectsWorkflowView({
           </div>
         </div>
 
-        <div className="table-wrap">
-          <table className="data-table">
+        <div className="max-h-64 overflow-auto border rounded-md">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th scope="col">Project</th>
-                <th scope="col">Tasks</th>
-                <th scope="col">Open issues</th>
-                <th scope="col">Created</th>
-                <th scope="col">Action</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Tasks</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Open issues</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
               </tr>
             </thead>
             <tbody>
               {projects.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="empty-row">
+                  <td colSpan={5} className="text-muted-foreground text-center border-b px-2 py-1.5 text-left">
                     No projects yet.
                   </td>
                 </tr>
               ) : (
                 projects.map((item) => (
-                  <tr key={item.id}>
-                    <td>
+                  <tr key={item.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left">
                       {isEditingId === item.id ? (
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <div className="flex gap-2 items-center">
                           <input
-                            className="text-input"
+                            className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground w-[200px]"
                             value={editProjectName}
                             onChange={(e) => setEditProjectName(e.target.value)}
                             disabled={isSavingEditId === item.id}
-                            style={{ width: "200px" }}
                           />
                           <AppButton
                             variant="ghost"
@@ -279,25 +279,29 @@ export default function ProjectsWorkflowView({
                           </AppButton>
                         </div>
                       ) : (
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                          <Link href="/tasks" className="text-link" style={{ fontSize: "0.82rem" }}>
+                        <div className="flex gap-2 items-center">
+                          <Link href="/tasks" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 text-sm">
                             {item.name}
                           </Link>
-                          <button
-                            onClick={() => handleStartEditProject(item)}
-                            className="text-link-button"
-                            title="Rename"
-                          >
-                            <FiEdit2 size={13} />
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleStartEditProject(item)}
+                                className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
+                              >
+                                <FiEdit2 size={13} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>Rename</TooltipContent>
+                          </Tooltip>
                         </div>
                       )}
                     </td>
-                    <td>{item.taskCount}</td>
-                    <td>{item.openIssueCount}</td>
-                    <td>{formatDate(item.createdAt)}</td>
-                    <td>
-                      <div className="button-row">
+                    <td className="border-b px-2 py-1.5 text-left">{item.taskCount}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{item.openIssueCount}</td>
+                    <td className="border-b px-2 py-1.5 text-left">{formatDate(item.createdAt)}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <div className="flex items-center gap-1.5">
                         <AppButton
                           variant="secondary"
                           onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
@@ -333,8 +337,8 @@ export default function ProjectsWorkflowView({
       </section>
 
       {showArchived && (
-        <section className="card">
-          <div className="card-header">
+        <section className="rounded-lg border bg-card shadow-card p-2.5">
+          <div className="flex flex-wrap gap-2 justify-between mb-2">
             <h2>Archived projects</h2>
             <AppButton
               variant="ghost"
@@ -346,25 +350,25 @@ export default function ProjectsWorkflowView({
           </div>
 
           {loadingArchived ? (
-            <p className="empty-row" style={{ padding: "1rem" }}>Loading...</p>
+            <p className="text-muted-foreground text-center p-4">Loading...</p>
           ) : archivedProjects.length === 0 ? (
-            <p className="empty-row" style={{ padding: "1rem" }}>No archived projects.</p>
+            <p className="text-muted-foreground text-center p-4">No archived projects.</p>
           ) : (
-            <div className="table-wrap">
-              <table className="data-table">
+            <div className="max-h-64 overflow-auto border rounded-md">
+              <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th scope="col">Project</th>
-                    <th scope="col">Created</th>
-                    <th scope="col">Action</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
+                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {archivedProjects.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.name}</td>
-                      <td>{formatDate(item.createdAt)}</td>
-                      <td>
+                    <tr key={item.id} className="transition-colors hover:bg-accent">
+                      <td className="border-b px-2 py-1.5 text-left">{item.name}</td>
+                      <td className="border-b px-2 py-1.5 text-left">{formatDate(item.createdAt)}</td>
+                      <td className="border-b px-2 py-1.5 text-left">
                         <AppButton
                           variant="secondary"
                           onClick={() => handleRestoreProject(item.id)}
@@ -393,7 +397,7 @@ export default function ProjectsWorkflowView({
         }}
         title="Create project"
       >
-        <div className="workflow-form">
+        <div className="flex items-end gap-2 mb-2">
           <TextField
             id="projectName"
             label="Project name"
@@ -421,16 +425,15 @@ export default function ProjectsWorkflowView({
         />
       </Modal>
 
-      {/* Archive confirmation dialog */}
       {confirmArchiveId !== null && (
-        <div className="confirm-overlay" onClick={() => setConfirmArchiveId(null)}>
-          <div className="confirm-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmArchiveId(null)}>
+          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
             <h3>Archive project</h3>
             <p>
               This will hide the project and its tasks/issues from the active workflow.
               You can restore it from the archived list later.
             </p>
-            <div className="confirm-actions">
+            <div className="flex justify-end gap-1.5">
               <AppButton variant="ghost" onClick={() => setConfirmArchiveId(null)}>
                 Cancel
               </AppButton>

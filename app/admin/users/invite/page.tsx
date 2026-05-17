@@ -55,29 +55,29 @@ export default function InviteUserPage() {
   };
 
   return (
-    <section className="workflow-stack">
-      <Link href="/admin/users" className="text-link">
-        <span className="icon-with-label">
+    <section className="flex flex-col gap-2 min-h-0">
+      <Link href="/admin/users" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
+        <span className="inline-flex items-center gap-1">
           <FiArrowLeft /> Back to Users
         </span>
       </Link>
 
-      <div className="card">
-        <div className="card-header">
+      <div className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Invite New User</h2>
             <p>Send an invitation link to a new user to join the platform</p>
           </div>
         </div>
 
-        <form onSubmit={handleInvite} className="form-stack" style={{ marginTop: 0 }}>
-          <div className="field-wrap">
-            <label htmlFor="email" className="field-label">
+        <form onSubmit={handleInvite} className="mt-0 flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="email" className="text-sm font-semibold text-muted-foreground">
               Email Address
             </label>
-            <div style={{ position: "relative" }}>
+            <div className="relative">
               <FiMail
-                style={{ position: "absolute", left: "0.72rem", top: "0.7rem", color: "var(--text-muted)" }}
+                className="absolute left-3 top-[0.7rem] text-muted-foreground"
               />
               <input
                 id="email"
@@ -85,27 +85,26 @@ export default function InviteUserPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@example.com"
-                className="text-input"
-                style={{ paddingLeft: "2.2rem" }}
+                className="w-full border rounded-md bg-accent text-foreground text-sm pl-9 pr-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
                 required
               />
             </div>
           </div>
 
-          <div className="field-wrap">
-            <label htmlFor="role" className="field-label">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="role" className="text-sm font-semibold text-muted-foreground">
               Role
             </label>
             <select
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value as "admin" | "member")}
-              className="filter-input"
+              className="min-w-40 border rounded-md bg-accent text-foreground text-sm px-2 py-1.5 transition-colors focus:border-primary"
             >
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
-            <p className="field-note">
+            <p className="text-xs text-muted-foreground">
               {role === "admin"
                 ? "Admins can manage users and system settings"
                 : "Members have basic access to projects and tasks"}
@@ -125,31 +124,24 @@ export default function InviteUserPage() {
         </form>
 
         {invitedUsers.length > 0 && (
-          <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--border)" }}>
-            <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>
+          <div className="mt-5 pt-5 border-t">
+            <h3 className="font-semibold mb-3">
               Recently Invited Users
             </h3>
-            <div className="form-stack" style={{ marginTop: 0 }}>
+            <div className="mt-0 flex flex-col gap-2">
               {invitedUsers.map((user, index) => (
                 <div
                   key={index}
-                  className="inline-status is-success"
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                  className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950"
                 >
                   <div>
-                    <p style={{ fontWeight: 600 }}>{user.email}</p>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "0.84rem" }}>
-                      Role: <span style={{ fontWeight: 500 }}>{user.role}</span>
+                    <p className="font-semibold">{user.email}</p>
+                    <p className="text-muted-foreground text-sm">
+                      Role: <span className="font-medium">{user.role}</span>
                     </p>
                   </div>
                   <span
-                    className="workflow-status-pill"
-                    style={{
-                      background: "color-mix(in srgb, var(--success) 20%, transparent)",
-                      color: "var(--success)",
-                      border: "none",
-                      fontWeight: 700,
-                    }}
+                    className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"
                   >
                     <FiCheckCircle style={{ marginRight: "0.25rem" }} /> Invited
                   </span>
@@ -159,19 +151,19 @@ export default function InviteUserPage() {
           </div>
         )}
 
-        <div className="inline-status is-info">
-          <h3 style={{ fontWeight: 600, marginBottom: "0.75rem" }}>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+          <h3 className="font-semibold mb-3">
             How it works
           </h3>
-          <div className="form-stack" style={{ marginTop: 0, gap: "0.5rem" }}>
+          <div className="mt-0 flex flex-col gap-2">
             {[
               "Enter the user's email address and select their role",
               "An invitation email will be sent to them",
               "They will receive a link to join and set up their account",
               "Admin users can manage other users and system settings",
             ].map((step, i) => (
-              <p key={i} style={{ color: "var(--text-secondary)", fontSize: "0.88rem", display: "flex", gap: "0.4rem" }}>
-                <strong style={{ color: "var(--info)" }}>{i + 1}.</strong>
+              <p key={i} className="text-muted-foreground text-sm flex gap-1.5">
+                <strong className="text-blue-600 dark:text-blue-400">{i + 1}.</strong>
                 <span>{step}</span>
               </p>
             ))}

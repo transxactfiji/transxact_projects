@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReactElement } from "react";
 import { FiLogOut } from "react-icons/fi";
-import AppButton from "./appButton";
+import { Button } from "@/components/ui/button";
 
 export default function LogoutButton(): ReactElement {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -21,14 +21,14 @@ export default function LogoutButton(): ReactElement {
   };
 
   return (
-    <AppButton
+    <Button
       variant="ghost"
+      size="sm"
       onClick={() => void handleLogout()}
-      isLoading={isLoggingOut}
-      loadingLabel="Logging out..."
-      startIcon={<FiLogOut aria-hidden="true" />}
+      disabled={isLoggingOut}
     >
-      Logout
-    </AppButton>
+      <FiLogOut aria-hidden="true" />
+      {isLoggingOut ? "Logging out..." : "Logout"}
+    </Button>
   );
 }

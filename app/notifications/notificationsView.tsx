@@ -103,29 +103,29 @@ export default function NotificationsView({
   };
 
   return (
-    <section className="workflow-stack">
-      <section className="card">
-        <div className="card-header">
+    <section className="flex flex-col gap-2 min-h-0">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>Notification settings</h2>
             <p>Control in-app and email channels by category.</p>
           </div>
         </div>
 
-        <div className="table-wrap">
-          <table className="data-table">
+        <div className="max-h-64 overflow-auto border rounded-md">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th scope="col">Category</th>
-                <th scope="col">In-app</th>
-                <th scope="col">Email</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Category</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">In-app</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Email</th>
               </tr>
             </thead>
             <tbody>
               {preferences.map((item) => (
-                <tr key={item.category}>
-                  <td>{item.label}</td>
-                  <td>
+                <tr key={item.category} className="transition-colors hover:bg-accent">
+                  <td className="border-b px-2 py-1.5 text-left">{item.label}</td>
+                  <td className="border-b px-2 py-1.5 text-left">
                     <input
                       type="checkbox"
                       checked={item.inAppEnabled}
@@ -140,7 +140,7 @@ export default function NotificationsView({
                       aria-label={`${item.label} in-app setting`}
                     />
                   </td>
-                  <td>
+                  <td className="border-b px-2 py-1.5 text-left">
                     <input
                       type="checkbox"
                       checked={item.emailEnabled}
@@ -162,8 +162,8 @@ export default function NotificationsView({
         </div>
       </section>
 
-      <section className="card">
-        <div className="card-header">
+      <section className="rounded-lg border bg-card shadow-card p-2.5">
+        <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>All notifications</h2>
             <p>Review activity and open the linked destination.</p>
@@ -184,14 +184,14 @@ export default function NotificationsView({
           message={status?.message ?? null}
         />
 
-        <div className="table-wrap">
-          <table className="data-table">
+        <div className="max-h-64 overflow-auto border rounded-md">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
-                <th scope="col">Status</th>
-                <th scope="col">Title</th>
-                <th scope="col">When</th>
-                <th scope="col">Action</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Title</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">When</th>
+                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -199,29 +199,29 @@ export default function NotificationsView({
                 <tr>
                   <td
                     colSpan={4}
-                    className="empty-row"
+                    className="text-muted-foreground text-center border-b px-2 py-1.5 text-left"
                   >
                     No notifications yet.
                   </td>
                 </tr>
               ) : (
                 notifications.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.isRead ? "Read" : "Unread"}</td>
-                    <td>
-                      <div className="workflow-title">{item.title}</div>
+                  <tr key={item.id} className="transition-colors hover:bg-accent">
+                    <td className="border-b px-2 py-1.5 text-left">{item.isRead ? "Read" : "Unread"}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <div className="font-semibold">{item.title}</div>
                       {item.body ? (
-                        <p className="workflow-subtext">{item.body}</p>
+                        <p className="mt-1 text-muted-foreground text-xs">{item.body}</p>
                       ) : null}
                     </td>
-                    <td>{formatDateTime(item.createdAt)}</td>
-                    <td>
-                      <div className="button-row">
+                    <td className="border-b px-2 py-1.5 text-left">{formatDateTime(item.createdAt)}</td>
+                    <td className="border-b px-2 py-1.5 text-left">
+                      <div className="flex items-center gap-1.5">
                         <Link
                           href={item.href}
-                          className="text-link"
+                          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80"
                         >
-                          <span className="icon-with-label">
+                          <span className="inline-flex items-center gap-1">
                             <FiExternalLink aria-hidden="true" />
                             <span>Open</span>
                           </span>
