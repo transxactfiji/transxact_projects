@@ -50,6 +50,8 @@ export type SubscribableEntityType = "project" | "case" | "task" | "issue";
 export const project = sqliteTable("project", {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull(),
+  description: text(),
+  color: text(),
   createdByUserId: int().references(() => user.id),
   createdAt: text().notNull(),
   updatedAt: text(),
@@ -57,6 +59,14 @@ export const project = sqliteTable("project", {
 });
 
 export type CaseStatus = "open" | "in_progress" | "closed";
+export type CaseType =
+  | "development"
+  | "support"
+  | "maintenance"
+  | "incident"
+  | "consulting"
+  | "training"
+  | "other";
 export const supportCase = sqliteTable("case", {
   id: int().primaryKey({ autoIncrement: true }),
   projectId: int()
@@ -65,6 +75,7 @@ export const supportCase = sqliteTable("case", {
   title: text().notNull(),
   description: text(),
   customerName: text(),
+  type: text().notNull().$type<CaseType>().default("support"),
   status: text().notNull().$type<CaseStatus>().default("open"),
   createdByUserId: int()
     .notNull()

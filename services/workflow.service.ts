@@ -1,6 +1,15 @@
 "use server";
 
-import { and, asc, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+} from "drizzle-orm";
 import db, { ensureDbSchema } from "@/db/connection";
 import {
   caseItem,
@@ -8,6 +17,7 @@ import {
   type CaseItemPriority,
   type CaseItemSeverity,
   type CaseItemStatus,
+  type CaseType,
   issue,
   type IssueStatus,
   project,
@@ -18,10 +28,7 @@ import {
   user,
   workItemComment,
 } from "@/db/schema";
-import {
-  listActionsByTask,
-  type ActionItem,
-} from "./action.service";
+import { listActionsByTask, type ActionItem } from "./action.service";
 import {
   listAttachmentsByTask,
   listAttachmentsByIssue,
@@ -32,10 +39,17 @@ import {
   listUserEntitySubscriptionState,
   toggleEntitySubscription,
 } from "./entity-subscription.service";
-import { dispatchEntityNotification, notifyEntityWatchers } from "./entity-notify.service";
-import { publishRealtimeRefresh, publishRealtimeRefreshAll } from "./realtime.service";
+import {
+  dispatchEntityNotification,
+  notifyEntityWatchers,
+} from "./entity-notify.service";
+import {
+  publishRealtimeRefresh,
+  publishRealtimeRefreshAll,
+} from "./realtime.service";
 import { requireSessionUser } from "./session.service";
 import { displayName, nowIso } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
 
 const MIN_TITLE_LENGTH = 3;
 const MAX_COMMENT_LENGTH = 2000;
@@ -100,6 +114,8 @@ export interface TaskOption {
 export interface ProjectWorkflowItem {
   id: number;
   name: string;
+  description: string | null;
+  color: string | null;
   createdAt: string;
   taskCount: number;
   openIssueCount: number;
@@ -113,6 +129,7 @@ export interface TaskWorkflowItem {
   status: TaskStatus;
   dueAt: string;
   projectName: string;
+  projectColor: string | null;
   caseName: string;
   itemName: string;
   assigneeName: string | null;
@@ -127,6 +144,7 @@ export interface IssueWorkflowItem {
   description: string | null;
   status: IssueStatus;
   projectName: string;
+  projectColor: string | null;
   taskTitle: string | null;
   assigneeName: string | null;
   isFollowing: boolean;
@@ -180,13 +198,17 @@ interface CreateIssueInput {
 function normalizeTitle(rawTitle: string, label: string): string {
   const normalized = rawTitle.trim().replace(/\s+/g, " ");
   if (normalized.length < MIN_TITLE_LENGTH) {
-    throw new Error(`${label} must be at least ${MIN_TITLE_LENGTH} characters.`);
+    throw new Error(
+      `${label} must be at least ${MIN_TITLE_LENGTH} characters.`,
+    );
   }
 
   return normalized;
 }
 
-function normalizeDescription(rawDescription: string | undefined): string | null {
+function normalizeDescription(
+  rawDescription: string | undefined,
+): string | null {
   if (!rawDescription) {
     return null;
   }
@@ -303,8 +325,6 @@ async function resolveAssigneeId(
   return resolvedAssigneeId;
 }
 
-
-
 async function listProjectOptions(): Promise<ProjectOption[]> {
   const rows = await db
     .select({
@@ -317,8 +337,6 @@ async function listProjectOptions(): Promise<ProjectOption[]> {
 
   return rows;
 }
-
-
 
 export async function listAllCaseOptions(): Promise<CaseOption[]> {
   await requireSessionUser();
@@ -333,9 +351,7 @@ export async function listAllCaseOptions(): Promise<CaseOption[]> {
     })
     .from(supportCase)
     .innerJoin(project, eq(supportCase.projectId, project.id))
-    .where(
-      and(isNull(supportCase.deletedAt), isNull(project.deletedAt)),
-    )
+    .where(and(isNull(supportCase.deletedAt), isNull(project.deletedAt)))
     .orderBy(asc(project.name), asc(supportCase.title));
 
   return rows;
@@ -363,7 +379,11 @@ export async function listAllItemOptions(): Promise<ItemOption[]> {
         isNull(project.deletedAt),
       ),
     )
-    .orderBy(asc(project.name), asc(supportCase.title), asc(caseItem.createdAt));
+    .orderBy(
+      asc(project.name),
+      asc(supportCase.title),
+      asc(caseItem.createdAt),
+    );
 
   return rows;
 }
@@ -445,7 +465,9 @@ async function listIssueCommentsByIssueId(
   issueIds: number[],
   currentUserId: number,
 ): Promise<Map<number, WorkItemCommentThreadItem[]>> {
-  const uniqueIssueIds = [...new Set(issueIds)].filter((issueId) => issueId > 0);
+  const uniqueIssueIds = [...new Set(issueIds)].filter(
+    (issueId) => issueId > 0,
+  );
   if (uniqueIssueIds.length === 0) {
     return new Map();
   }
@@ -507,6 +529,8 @@ export async function listProjectWorkflowData(): Promise<{
     .select({
       id: project.id,
       name: project.name,
+      description: project.description,
+      color: project.color,
       createdAt: project.createdAt,
     })
     .from(project)
@@ -521,7 +545,13 @@ export async function listProjectWorkflowData(): Promise<{
     .from(task)
     .innerJoin(caseItem, eq(task.itemId, caseItem.id))
     .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
-    .where(and(isNull(task.deletedAt), isNull(caseItem.deletedAt), isNull(supportCase.deletedAt)))
+    .where(
+      and(
+        isNull(task.deletedAt),
+        isNull(caseItem.deletedAt),
+        isNull(supportCase.deletedAt),
+      ),
+    )
     .groupBy(supportCase.projectId);
 
   const openIssueRows = await db
@@ -556,6 +586,8 @@ export async function listProjectWorkflowData(): Promise<{
   const projects = projectRows.map((row) => ({
     id: row.id,
     name: row.name,
+    description: row.description,
+    color: row.color,
     createdAt: row.createdAt,
     taskCount: taskCountByProjectId.get(row.id) ?? 0,
     openIssueCount: openIssueCountByProjectId.get(row.id) ?? 0,
@@ -573,6 +605,8 @@ export async function listArchivedProjects(): Promise<ProjectWorkflowItem[]> {
     .select({
       id: project.id,
       name: project.name,
+      description: project.description,
+      color: project.color,
       createdAt: project.createdAt,
     })
     .from(project)
@@ -582,6 +616,8 @@ export async function listArchivedProjects(): Promise<ProjectWorkflowItem[]> {
   return projectRows.map((row) => ({
     id: row.id,
     name: row.name,
+    description: row.description,
+    color: row.color,
     createdAt: row.createdAt,
     taskCount: 0,
     openIssueCount: 0,
@@ -624,7 +660,8 @@ function computeUnreadCommentCount(
 ): number {
   if (!lastReadAt || comments.length === 0) return 0;
   const readTime = new Date(lastReadAt).getTime();
-  return comments.filter((c) => new Date(c.createdAt).getTime() > readTime).length;
+  return comments.filter((c) => new Date(c.createdAt).getTime() > readTime)
+    .length;
 }
 
 export async function listTaskWorkflowData(): Promise<TaskWorkflowData> {
@@ -636,7 +673,7 @@ export async function listTaskWorkflowData(): Promise<TaskWorkflowData> {
     listAllCaseOptions(),
     listAllItemOptions(),
     listAssigneeOptions(),
-      db
+    db
       .select({
         id: task.id,
         title: task.title,
@@ -644,12 +681,14 @@ export async function listTaskWorkflowData(): Promise<TaskWorkflowData> {
         status: task.status,
         dueAt: task.dueAt,
         projectName: project.name,
+        projectColor: project.color,
         caseName: supportCase.title,
         itemName: caseItem.description,
         assigneeName: user.name,
       })
       .from(task)
-      .innerJoin(caseItem, eq(task.itemId, caseItem.id)).innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
+      .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+      .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
       .innerJoin(project, eq(supportCase.projectId, project.id))
       .leftJoin(user, eq(task.assigneeUserId, user.id))
       .where(
@@ -711,8 +750,15 @@ export async function listIssueWorkflowData(): Promise<IssueWorkflowData> {
         projectId: supportCase.projectId,
       })
       .from(task)
-      .innerJoin(caseItem, eq(task.itemId, caseItem.id)).innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
-      .where(and(isNull(task.deletedAt), isNull(caseItem.deletedAt), isNull(supportCase.deletedAt)))
+      .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+      .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
+      .where(
+        and(
+          isNull(task.deletedAt),
+          isNull(caseItem.deletedAt),
+          isNull(supportCase.deletedAt),
+        ),
+      )
       .orderBy(desc(task.createdAt)),
     listAssigneeOptions(),
     db
@@ -722,6 +768,7 @@ export async function listIssueWorkflowData(): Promise<IssueWorkflowData> {
         description: issue.description,
         status: issue.status,
         projectName: project.name,
+        projectColor: project.color,
         taskTitle: task.title,
         assigneeName: user.name,
       })
@@ -755,15 +802,21 @@ export async function listIssueWorkflowData(): Promise<IssueWorkflowData> {
   };
 }
 
-export async function createProject(projectName: string): Promise<void> {
+export async function createProject(input: {
+  name: string;
+  description?: string;
+  color?: string;
+}): Promise<void> {
   const currentUser = await requireSessionUser();
-  const name = normalizeTitle(projectName, "Project name");
+  const name = normalizeTitle(input.name, "Project name");
   const nowIso = new Date().toISOString();
 
   const insertedRows = await db
     .insert(project)
     .values({
       name,
+      description: input.description?.trim() || null,
+      color: input.color?.trim() || null,
       createdByUserId: currentUser.id,
       createdAt: nowIso,
       updatedAt: nowIso,
@@ -774,7 +827,9 @@ export async function createProject(projectName: string): Promise<void> {
     throw new Error("Unable to create project.");
   }
 
-  await ensureEntitySubscriptions("project", insertedRows[0].id, [currentUser.id]);
+  await ensureEntitySubscriptions("project", insertedRows[0].id, [
+    currentUser.id,
+  ]);
   publishRealtimeRefreshAll();
 }
 
@@ -867,9 +922,15 @@ export async function restoreProject(projectId: number): Promise<void> {
   });
 }
 
-export async function updateProject(projectId: number, name: string): Promise<void> {
+export async function updateProject(
+  projectId: number,
+  fields: {
+    name?: string;
+    description?: string;
+    color?: string;
+  },
+): Promise<void> {
   const currentUser = await requireSessionUser();
-  const normalizedName = normalizeTitle(name, "Project name");
   const nowIso = new Date().toISOString();
 
   const rows = await db
@@ -881,34 +942,76 @@ export async function updateProject(projectId: number, name: string): Promise<vo
     throw new Error("Project not found.");
   }
 
-  const oldName = rows[0].name;
-  await db
-    .update(project)
-    .set({ name: normalizedName, updatedAt: nowIso })
-    .where(eq(project.id, projectId));
+  const updates: Record<string, unknown> = { updatedAt: nowIso };
 
-  await dispatchEntityNotification({
-    entity: {
-      type: "project",
-      id: projectId,
-      creatorUserId: rows[0].createdByUserId,
-    },
-    notification: {
-      actorUserId: currentUser.id,
-      category: "project_activity",
-      type: "project_updated",
-      title: `Project renamed: ${oldName} → ${normalizedName}`,
-      body: `${currentUser.name ?? "Someone"} renamed this project.`,
-      href: "/projects",
-      sourceType: "project",
-      sourceId: projectId,
-      emailDelayMinutes: 0,
-    },
-    globalRefresh: true,
-  });
+  if (fields.name !== undefined) {
+    updates.name = normalizeTitle(fields.name, "Project name");
+  }
+  if (fields.description !== undefined) {
+    updates.description = fields.description?.trim() || null;
+  }
+  if (fields.color !== undefined) {
+    updates.color = fields.color?.trim() || null;
+  }
+
+  await db.update(project).set(updates).where(eq(project.id, projectId));
+
+  const oldName = rows[0].name;
+  const newName =
+    fields.name !== undefined
+      ? normalizeTitle(fields.name, "Project name")
+      : oldName;
+  if (fields.name !== undefined && newName !== oldName) {
+    await dispatchEntityNotification({
+      entity: {
+        type: "project",
+        id: projectId,
+        creatorUserId: rows[0].createdByUserId,
+      },
+      notification: {
+        actorUserId: currentUser.id,
+        category: "project_activity",
+        type: "project_updated",
+        title: `Project renamed: ${oldName} → ${newName}`,
+        body: `${currentUser.name ?? "Someone"} renamed this project.`,
+        href: "/projects",
+        sourceType: "project",
+        sourceId: projectId,
+        emailDelayMinutes: 0,
+      },
+      globalRefresh: true,
+    });
+  } else {
+    publishRealtimeRefreshAll();
+  }
 }
 
-export async function createTask(input: CreateTaskInput): Promise<{ id: number }> {
+export async function deleteProject(projectId: number): Promise<void> {
+  await requireSessionUser();
+  await ensureDbSchema();
+
+  const rows = await db
+    .select({
+      id: project.id,
+      name: project.name,
+      createdByUserId: project.createdByUserId,
+    })
+    .from(project)
+    .where(eq(project.id, projectId))
+    .limit(1);
+
+  if (rows.length === 0) {
+    throw new Error("Project not found.");
+  }
+
+  await db.delete(project).where(eq(project.id, projectId));
+
+  publishRealtimeRefreshAll();
+}
+
+export async function createTask(
+  input: CreateTaskInput,
+): Promise<{ id: number }> {
   const currentUser = await requireSessionUser();
   const title = normalizeTitle(input.title, "Task title");
   const description = normalizeDescription(input.description);
@@ -1016,10 +1119,7 @@ export async function advanceTaskStatus(taskId: number): Promise<TaskStatus> {
       sourceId: taskId,
       emailDelayMinutes: 0,
     },
-    subscribeParticipantIds: [
-      rows[0].createdByUserId,
-      rows[0].assigneeUserId,
-    ],
+    subscribeParticipantIds: [rows[0].createdByUserId, rows[0].assigneeUserId],
   });
 
   return nextStatus;
@@ -1075,10 +1175,7 @@ export async function reverseTaskStatus(taskId: number): Promise<TaskStatus> {
       sourceId: taskId,
       emailDelayMinutes: 0,
     },
-    subscribeParticipantIds: [
-      rows[0].createdByUserId,
-      rows[0].assigneeUserId,
-    ],
+    subscribeParticipantIds: [rows[0].createdByUserId, rows[0].assigneeUserId],
   });
 
   return prevStatus;
@@ -1086,7 +1183,12 @@ export async function reverseTaskStatus(taskId: number): Promise<TaskStatus> {
 
 export async function updateTask(
   taskId: number,
-  fields: { title?: string; description?: string; dueOn?: string; assigneeUserId?: number },
+  fields: {
+    title?: string;
+    description?: string;
+    dueOn?: string;
+    assigneeUserId?: number;
+  },
 ): Promise<void> {
   const currentUser = await requireSessionUser();
 
@@ -1159,7 +1261,10 @@ export async function updateTask(
   });
 }
 
-export async function addTaskComment(taskId: number, rawCommentBody: string): Promise<{ id: number }> {
+export async function addTaskComment(
+  taskId: number,
+  rawCommentBody: string,
+): Promise<{ id: number }> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
 
@@ -1256,7 +1361,9 @@ export async function markTaskCommentsRead(taskId: number): Promise<void> {
   }
 }
 
-export async function createIssue(input: CreateIssueInput): Promise<{ id: number }> {
+export async function createIssue(
+  input: CreateIssueInput,
+): Promise<{ id: number }> {
   const currentUser = await requireSessionUser();
   const title = normalizeTitle(input.title, "Issue title");
   const description = normalizeDescription(input.description);
@@ -1268,7 +1375,8 @@ export async function createIssue(input: CreateIssueInput): Promise<{ id: number
     const matchingTaskRows = await db
       .select({ id: task.id })
       .from(task)
-      .innerJoin(caseItem, eq(task.itemId, caseItem.id)).innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
+      .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+      .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
       .where(
         and(
           eq(task.id, input.taskId),
@@ -1327,16 +1435,17 @@ export async function createIssue(input: CreateIssueInput): Promise<{ id: number
       sourceId: createdIssueId,
       emailDelayMinutes: 0,
     },
-    subscribeParticipantIds: [
-      currentUser.id,
-      input.assigneeUserId,
-    ].filter((id): id is number => typeof id === "number" && id > 0),
+    subscribeParticipantIds: [currentUser.id, input.assigneeUserId].filter(
+      (id): id is number => typeof id === "number" && id > 0,
+    ),
   });
 
   return { id: createdIssueId };
 }
 
-export async function reverseIssueStatus(issueId: number): Promise<IssueStatus> {
+export async function reverseIssueStatus(
+  issueId: number,
+): Promise<IssueStatus> {
   const currentUser = await requireSessionUser();
 
   const rows = await db
@@ -1395,7 +1504,9 @@ export async function reverseIssueStatus(issueId: number): Promise<IssueStatus> 
   return prevStatus;
 }
 
-export async function advanceIssueStatus(issueId: number): Promise<IssueStatus> {
+export async function advanceIssueStatus(
+  issueId: number,
+): Promise<IssueStatus> {
   const currentUser = await requireSessionUser();
 
   const rows = await db
@@ -1456,7 +1567,11 @@ export async function advanceIssueStatus(issueId: number): Promise<IssueStatus> 
 
 export async function updateIssue(
   issueId: number,
-  fields: { title?: string; description?: string; assigneeUserId?: number | null },
+  fields: {
+    title?: string;
+    description?: string;
+    assigneeUserId?: number | null;
+  },
 ): Promise<void> {
   const currentUser = await requireSessionUser();
 
@@ -1613,7 +1728,9 @@ export async function editTaskComment(
       issueId: workItemComment.issueId,
     })
     .from(workItemComment)
-    .where(and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)))
+    .where(
+      and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)),
+    )
     .limit(1);
 
   if (rows.length === 0) {
@@ -1632,9 +1749,15 @@ export async function editTaskComment(
 
   const commentRow = rows[0];
   if (commentRow.taskId) {
-    await notifyEntityWatchers({ type: "task", id: commentRow.taskId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "task", id: commentRow.taskId },
+      currentUser.id,
+    );
   } else if (commentRow.issueId) {
-    await notifyEntityWatchers({ type: "issue", id: commentRow.issueId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "issue", id: commentRow.issueId },
+      currentUser.id,
+    );
   }
 }
 
@@ -1654,7 +1777,9 @@ export async function deleteTaskComment(commentId: number): Promise<void> {
       issueId: workItemComment.issueId,
     })
     .from(workItemComment)
-    .where(and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)))
+    .where(
+      and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)),
+    )
     .limit(1);
 
   if (rows.length === 0) {
@@ -1673,9 +1798,15 @@ export async function deleteTaskComment(commentId: number): Promise<void> {
 
   const commentRow = rows[0];
   if (commentRow.taskId) {
-    await notifyEntityWatchers({ type: "task", id: commentRow.taskId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "task", id: commentRow.taskId },
+      currentUser.id,
+    );
   } else if (commentRow.issueId) {
-    await notifyEntityWatchers({ type: "issue", id: commentRow.issueId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "issue", id: commentRow.issueId },
+      currentUser.id,
+    );
   }
 }
 
@@ -1699,7 +1830,9 @@ export async function editIssueComment(
       issueId: workItemComment.issueId,
     })
     .from(workItemComment)
-    .where(and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)))
+    .where(
+      and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)),
+    )
     .limit(1);
 
   if (rows.length === 0) {
@@ -1718,9 +1851,15 @@ export async function editIssueComment(
 
   const commentRow = rows[0];
   if (commentRow.taskId) {
-    await notifyEntityWatchers({ type: "task", id: commentRow.taskId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "task", id: commentRow.taskId },
+      currentUser.id,
+    );
   } else if (commentRow.issueId) {
-    await notifyEntityWatchers({ type: "issue", id: commentRow.issueId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "issue", id: commentRow.issueId },
+      currentUser.id,
+    );
   }
 }
 
@@ -1740,7 +1879,9 @@ export async function deleteIssueComment(commentId: number): Promise<void> {
       issueId: workItemComment.issueId,
     })
     .from(workItemComment)
-    .where(and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)))
+    .where(
+      and(eq(workItemComment.id, commentId), isNull(workItemComment.deletedAt)),
+    )
     .limit(1);
 
   if (rows.length === 0) {
@@ -1759,9 +1900,15 @@ export async function deleteIssueComment(commentId: number): Promise<void> {
 
   const commentRow = rows[0];
   if (commentRow.taskId) {
-    await notifyEntityWatchers({ type: "task", id: commentRow.taskId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "task", id: commentRow.taskId },
+      currentUser.id,
+    );
   } else if (commentRow.issueId) {
-    await notifyEntityWatchers({ type: "issue", id: commentRow.issueId }, currentUser.id);
+    await notifyEntityWatchers(
+      { type: "issue", id: commentRow.issueId },
+      currentUser.id,
+    );
   }
 }
 
@@ -1775,21 +1922,30 @@ export async function setProjectFollow(
   publishRealtimeRefresh([currentUser.id]);
 }
 
-export async function setCaseFollow(caseId: number, follow: boolean): Promise<void> {
+export async function setCaseFollow(
+  caseId: number,
+  follow: boolean,
+): Promise<void> {
   const currentUser = await requireSessionUser();
   await requireActiveCase(caseId);
   await toggleEntitySubscription("case", caseId, follow);
   publishRealtimeRefresh([currentUser.id]);
 }
 
-export async function setTaskFollow(taskId: number, follow: boolean): Promise<void> {
+export async function setTaskFollow(
+  taskId: number,
+  follow: boolean,
+): Promise<void> {
   const currentUser = await requireSessionUser();
   await requireActiveTask(taskId);
   await toggleEntitySubscription("task", taskId, follow);
   publishRealtimeRefresh([currentUser.id]);
 }
 
-export async function setIssueFollow(issueId: number, follow: boolean): Promise<void> {
+export async function setIssueFollow(
+  issueId: number,
+  follow: boolean,
+): Promise<void> {
   const currentUser = await requireSessionUser();
   await requireActiveIssue(issueId);
   await toggleEntitySubscription("issue", issueId, follow);
@@ -1804,6 +1960,7 @@ export interface TaskDetailItem {
   dueAt: string;
   projectId: number;
   projectName: string;
+  projectColor: string | null;
   caseId: number;
   caseName: string;
   itemId: number;
@@ -1819,7 +1976,9 @@ export interface TaskDetailItem {
   attachments: AttachmentItem[];
 }
 
-export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem> {
+export async function getTaskDetailById(
+  taskId: number,
+): Promise<TaskDetailItem> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
 
@@ -1836,6 +1995,7 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
       dueAt: task.dueAt,
       projectId: project.id,
       projectName: project.name,
+      projectColor: project.color,
       caseId: caseItem.caseId,
       caseName: supportCase.title,
       itemId: task.itemId,
@@ -1846,7 +2006,8 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
       createdAt: task.createdAt,
     })
     .from(task)
-    .innerJoin(caseItem, eq(task.itemId, caseItem.id)).innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
+    .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+    .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
     .innerJoin(project, eq(supportCase.projectId, project.id))
     .leftJoin(user, eq(task.assigneeUserId, user.id))
     .where(and(eq(task.id, taskId), isNull(task.deletedAt)))
@@ -1866,14 +2027,17 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
   const taskActions = await listActionsByTask(taskId);
 
   // Fetch following status
-  const followingState = await listUserEntitySubscriptionState("task", [taskId]);
+  const followingState = await listUserEntitySubscriptionState("task", [
+    taskId,
+  ]);
   const isFollowing = followingState.get(taskId) ?? false;
 
   // Fetch attachments
   const attachments = await listAttachmentsByTask(taskId);
 
   // Use the current user name as fallback for creator
-  const creatorName = row.createdByUserId === currentUser.id ? "You" : "Creator";
+  const creatorName =
+    row.createdByUserId === currentUser.id ? "You" : "Creator";
 
   return {
     id: row.id,
@@ -1883,6 +2047,7 @@ export async function getTaskDetailById(taskId: number): Promise<TaskDetailItem>
     dueAt: row.dueAt,
     projectId: row.projectId,
     projectName: row.projectName,
+    projectColor: row.projectColor,
     caseId: row.caseId,
     caseName: row.caseName,
     itemId: row.itemId,
@@ -1906,6 +2071,7 @@ export interface IssueDetailItem {
   status: IssueStatus;
   projectId: number;
   projectName: string;
+  projectColor: string | null;
   taskId: number | null;
   taskTitle: string | null;
   assigneeId: number | null;
@@ -1918,7 +2084,9 @@ export interface IssueDetailItem {
   attachments: AttachmentItem[];
 }
 
-export async function getIssueDetailById(issueId: number): Promise<IssueDetailItem> {
+export async function getIssueDetailById(
+  issueId: number,
+): Promise<IssueDetailItem> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
 
@@ -1934,6 +2102,7 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
       status: issue.status,
       projectId: issue.projectId,
       projectName: project.name,
+      projectColor: project.color,
       taskId: issue.taskId,
       taskTitle: task.title,
       assigneeId: issue.assigneeUserId,
@@ -1959,14 +2128,17 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
   const issueComments = comments.get(issueId) ?? [];
 
   // Fetch following status
-  const followingState = await listUserEntitySubscriptionState("issue", [issueId]);
+  const followingState = await listUserEntitySubscriptionState("issue", [
+    issueId,
+  ]);
   const isFollowing = followingState.get(issueId) ?? false;
 
   // Fetch attachments
   const attachments = await listAttachmentsByIssue(issueId);
 
   // Use the current user name as fallback for creator
-  const creatorName = row.createdByUserId === currentUser.id ? "You" : "Creator";
+  const creatorName =
+    row.createdByUserId === currentUser.id ? "You" : "Creator";
 
   return {
     id: row.id,
@@ -1975,6 +2147,7 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
     status: row.status,
     projectId: row.projectId,
     projectName: row.projectName,
+    projectColor: row.projectColor,
     taskId: row.taskId,
     taskTitle: row.taskTitle,
     assigneeId: row.assigneeId,
@@ -1988,7 +2161,9 @@ export async function getIssueDetailById(issueId: number): Promise<IssueDetailIt
   };
 }
 
-export async function getTaskComments(taskId: number): Promise<WorkItemCommentThreadItem[]> {
+export async function getTaskComments(
+  taskId: number,
+): Promise<WorkItemCommentThreadItem[]> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
   const comments = await listTaskCommentsByTaskId([taskId], currentUser.id);
@@ -2000,9 +2175,11 @@ export interface CaseListItem {
   title: string;
   description: string | null;
   customerName: string | null;
+  type: CaseType;
   status: "open" | "in_progress" | "closed";
   projectId: number;
   projectName: string;
+  projectColor: string | null;
   taskCount: number;
   createdBy: string;
   createdAt: string;
@@ -2014,9 +2191,11 @@ export interface CaseDetail {
   title: string;
   description: string | null;
   customerName: string | null;
+  type: CaseType;
   status: "open" | "in_progress" | "closed";
   projectId: number;
   projectName: string;
+  projectColor: string | null;
   createdBy: string;
   createdByUserId: number;
   createdAt: string;
@@ -2052,9 +2231,11 @@ export async function listCases(): Promise<CaseListItem[]> {
       title: supportCase.title,
       description: supportCase.description,
       customerName: supportCase.customerName,
+      type: supportCase.type,
       status: supportCase.status,
       projectId: supportCase.projectId,
       projectName: project.name,
+      projectColor: project.color,
       createdBy: user.name,
       createdByEmail: user.email,
       createdAt: supportCase.createdAt,
@@ -2067,14 +2248,21 @@ export async function listCases(): Promise<CaseListItem[]> {
     .orderBy(desc(supportCase.createdAt));
 
   const caseIds = rows.map((r) => r.id);
-  const taskCounts = caseIds.length > 0
-    ? await db
-        .select({ caseId: caseItem.caseId, count: count(task.id) })
-        .from(task)
-        .innerJoin(caseItem, eq(task.itemId, caseItem.id))
-        .where(and(inArray(caseItem.caseId, caseIds), isNull(task.deletedAt), isNull(caseItem.deletedAt)))
-        .groupBy(caseItem.caseId)
-    : [];
+  const taskCounts =
+    caseIds.length > 0
+      ? await db
+          .select({ caseId: caseItem.caseId, count: count(task.id) })
+          .from(task)
+          .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+          .where(
+            and(
+              inArray(caseItem.caseId, caseIds),
+              isNull(task.deletedAt),
+              isNull(caseItem.deletedAt),
+            ),
+          )
+          .groupBy(caseItem.caseId)
+      : [];
 
   const countMap = new Map(taskCounts.map((c) => [c.caseId, c.count]));
 
@@ -2083,9 +2271,11 @@ export async function listCases(): Promise<CaseListItem[]> {
     title: r.title,
     description: r.description,
     customerName: r.customerName,
+    type: r.type as CaseType,
     status: r.status as CaseListItem["status"],
     projectId: r.projectId,
     projectName: r.projectName,
+    projectColor: r.projectColor,
     taskCount: countMap.get(r.id) ?? 0,
     createdBy: displayName(r.createdBy, r.createdByEmail ?? "unknown"),
     createdAt: r.createdAt,
@@ -2103,9 +2293,11 @@ export async function getCaseDetail(caseId: number): Promise<CaseDetail> {
       title: supportCase.title,
       description: supportCase.description,
       customerName: supportCase.customerName,
+      type: supportCase.type,
       status: supportCase.status,
       projectId: supportCase.projectId,
       projectName: project.name,
+      projectColor: project.color,
       createdByUserId: supportCase.createdByUserId,
       createdBy: user.name,
       createdByEmail: user.email,
@@ -2148,33 +2340,30 @@ export async function getCaseDetail(caseId: number): Promise<CaseDetail> {
     .orderBy(asc(caseItem.createdAt));
 
   const itemIds = itemRows.map((i) => i.id);
-  const taskRows = itemIds.length > 0
-    ? await db
-        .select({
-          id: task.id,
-          itemId: task.itemId,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          dueAt: task.dueAt,
-          projectName: project.name,
-          caseName: supportCase.title,
-          itemName: caseItem.description,
-          assigneeName: user.name,
-        })
-        .from(task)
-        .innerJoin(caseItem, eq(task.itemId, caseItem.id))
-        .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
-        .innerJoin(project, eq(supportCase.projectId, project.id))
-        .leftJoin(user, eq(task.assigneeUserId, user.id))
-        .where(
-          and(
-            inArray(task.itemId, itemIds),
-            isNull(task.deletedAt),
-          ),
-        )
-        .orderBy(desc(task.createdAt))
-    : [];
+  const taskRows =
+    itemIds.length > 0
+      ? await db
+          .select({
+            id: task.id,
+            itemId: task.itemId,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            dueAt: task.dueAt,
+            projectName: project.name,
+            projectColor: project.color,
+            caseName: supportCase.title,
+            itemName: caseItem.description,
+            assigneeName: user.name,
+          })
+          .from(task)
+          .innerJoin(caseItem, eq(task.itemId, caseItem.id))
+          .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
+          .innerJoin(project, eq(supportCase.projectId, project.id))
+          .leftJoin(user, eq(task.assigneeUserId, user.id))
+          .where(and(inArray(task.itemId, itemIds), isNull(task.deletedAt)))
+          .orderBy(desc(task.createdAt))
+      : [];
 
   const commentsByTaskId = await listTaskCommentsByTaskId(
     taskRows.map((t) => t.id),
@@ -2231,9 +2420,11 @@ export async function getCaseDetail(caseId: number): Promise<CaseDetail> {
     title: c.title,
     description: c.description,
     customerName: c.customerName,
+    type: c.type as CaseType,
     status: c.status as CaseDetail["status"],
     projectId: c.projectId,
     projectName: c.projectName,
+    projectColor: c.projectColor,
     createdBy: displayName(c.createdBy, c.createdByEmail ?? "unknown"),
     createdByUserId: c.createdByUserId,
     createdAt: c.createdAt,
@@ -2247,13 +2438,16 @@ export async function createCase(input: {
   title: string;
   description?: string;
   customerName?: string;
+  type?: CaseType;
 }): Promise<{ id: number }> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
 
   const title = input.title.trim();
   if (title.length < MIN_TITLE_LENGTH) {
-    throw new Error(`Case title must be at least ${MIN_TITLE_LENGTH} characters.`);
+    throw new Error(
+      `Case title must be at least ${MIN_TITLE_LENGTH} characters.`,
+    );
   }
 
   await requireActiveProject(input.projectId);
@@ -2266,6 +2460,7 @@ export async function createCase(input: {
       title,
       description: input.description?.trim() || null,
       customerName: input.customerName?.trim() || null,
+      type: (input.type as CaseType) || "support",
       status: "open",
       createdByUserId: currentUser.id,
       createdAt: timestamp,
@@ -2281,6 +2476,7 @@ export async function createCase(input: {
   await ensureEntitySubscriptions("case", rows[0].id, [currentUser.id]);
   publishRealtimeRefreshAll();
 
+  revalidatePath(`/cases`);
   return rows[0];
 }
 
@@ -2290,6 +2486,7 @@ export async function updateCase(
     title?: string;
     description?: string;
     customerName?: string;
+    type?: CaseType;
     status?: "open" | "in_progress" | "closed";
   },
 ): Promise<void> {
@@ -2311,7 +2508,9 @@ export async function updateCase(
   if (fields.title !== undefined) {
     const trimmed = fields.title.trim();
     if (trimmed.length < MIN_TITLE_LENGTH) {
-      throw new Error(`Case title must be at least ${MIN_TITLE_LENGTH} characters.`);
+      throw new Error(
+        `Case title must be at least ${MIN_TITLE_LENGTH} characters.`,
+      );
     }
     updates.title = trimmed;
   }
@@ -2320,6 +2519,9 @@ export async function updateCase(
   }
   if (fields.customerName !== undefined) {
     updates.customerName = fields.customerName?.trim() || null;
+  }
+  if (fields.type !== undefined) {
+    updates.type = fields.type;
   }
   if (fields.status !== undefined) {
     updates.status = fields.status;
@@ -2345,7 +2547,10 @@ export async function deleteCase(caseId: number): Promise<void> {
 
   const timestamp = nowIso();
 
-  await db.update(supportCase).set({ deletedAt: timestamp, updatedAt: timestamp }).where(eq(supportCase.id, caseId));
+  await db
+    .update(supportCase)
+    .set({ deletedAt: timestamp, updatedAt: timestamp })
+    .where(eq(supportCase.id, caseId));
 
   const items = await db
     .select({ id: caseItem.id })
@@ -2353,8 +2558,14 @@ export async function deleteCase(caseId: number): Promise<void> {
     .where(and(eq(caseItem.caseId, caseId), isNull(caseItem.deletedAt)));
 
   for (const item of items) {
-    await db.update(caseItem).set({ deletedAt: timestamp, updatedAt: timestamp }).where(eq(caseItem.id, item.id));
-    await db.update(task).set({ deletedAt: timestamp, updatedAt: timestamp }).where(eq(task.itemId, item.id));
+    await db
+      .update(caseItem)
+      .set({ deletedAt: timestamp, updatedAt: timestamp })
+      .where(eq(caseItem.id, item.id));
+    await db
+      .update(task)
+      .set({ deletedAt: timestamp, updatedAt: timestamp })
+      .where(eq(task.itemId, item.id));
   }
 
   publishRealtimeRefreshAll();
@@ -2363,7 +2574,7 @@ export async function deleteCase(caseId: number): Promise<void> {
 const PRIORITY_MATRIX: Record<string, Record<string, string>> = {
   many: { major: "P1", minor: "P1", degraded: "P2", none: "P3" },
   some: { major: "P1", minor: "P2", degraded: "P3", none: "P4" },
-  one:  { major: "P2", minor: "P3", degraded: "P4", none: "P4" },
+  one: { major: "P2", minor: "P3", degraded: "P4", none: "P4" },
 };
 
 function computeItemPriority(impact: string, severity: string): string {
@@ -2411,7 +2622,9 @@ export async function createItem(input: {
       priority: priority as CaseItemPriority,
       classification: input.classification.trim() || "bug",
       status: "rework" as CaseItemStatus,
-      relatedItemIds: input.relatedItemIds?.length ? JSON.stringify(input.relatedItemIds) : null,
+      relatedItemIds: input.relatedItemIds?.length
+        ? JSON.stringify(input.relatedItemIds)
+        : null,
       createdByUserId: currentUser.id,
       createdAt: timestamp,
       updatedAt: null,
@@ -2442,7 +2655,11 @@ export async function updateItem(
   await ensureDbSchema();
 
   const existing = await db
-    .select({ id: caseItem.id, impact: caseItem.impact, severity: caseItem.severity })
+    .select({
+      id: caseItem.id,
+      impact: caseItem.impact,
+      severity: caseItem.severity,
+    })
     .from(caseItem)
     .where(and(eq(caseItem.id, itemId), isNull(caseItem.deletedAt)))
     .limit(1);
@@ -2481,7 +2698,9 @@ export async function updateItem(
     updates.status = fields.status;
   }
   if (fields.relatedItemIds !== undefined) {
-    updates.relatedItemIds = fields.relatedItemIds.length ? JSON.stringify(fields.relatedItemIds) : null;
+    updates.relatedItemIds = fields.relatedItemIds.length
+      ? JSON.stringify(fields.relatedItemIds)
+      : null;
   }
 
   await db.update(caseItem).set(updates).where(eq(caseItem.id, itemId));
@@ -2504,13 +2723,21 @@ export async function deleteItem(itemId: number): Promise<void> {
 
   const timestamp = nowIso();
 
-  await db.update(caseItem).set({ deletedAt: timestamp, updatedAt: timestamp }).where(eq(caseItem.id, itemId));
-  await db.update(task).set({ deletedAt: timestamp, updatedAt: timestamp }).where(eq(task.itemId, itemId));
+  await db
+    .update(caseItem)
+    .set({ deletedAt: timestamp, updatedAt: timestamp })
+    .where(eq(caseItem.id, itemId));
+  await db
+    .update(task)
+    .set({ deletedAt: timestamp, updatedAt: timestamp })
+    .where(eq(task.itemId, itemId));
 
   publishRealtimeRefreshAll();
 }
 
-export async function getItemDetail(itemId: number): Promise<ItemDetail & { caseTitle: string; projectName: string }> {
+export async function getItemDetail(
+  itemId: number,
+): Promise<ItemDetail & { caseTitle: string; projectName: string; projectColor: string | null }> {
   const currentUser = await requireSessionUser();
   await ensureDbSchema();
 
@@ -2520,6 +2747,7 @@ export async function getItemDetail(itemId: number): Promise<ItemDetail & { case
       caseId: caseItem.caseId,
       caseTitle: supportCase.title,
       projectName: project.name,
+      projectColor: project.color,
       dateReported: caseItem.dateReported,
       description: caseItem.description,
       impact: caseItem.impact,
@@ -2556,6 +2784,7 @@ export async function getItemDetail(itemId: number): Promise<ItemDetail & { case
       status: task.status,
       dueAt: task.dueAt,
       projectName: project.name,
+      projectColor: project.color,
       caseName: supportCase.title,
       itemName: caseItem.description,
       assigneeName: user.name,
@@ -2565,12 +2794,7 @@ export async function getItemDetail(itemId: number): Promise<ItemDetail & { case
     .innerJoin(supportCase, eq(caseItem.caseId, supportCase.id))
     .innerJoin(project, eq(supportCase.projectId, project.id))
     .leftJoin(user, eq(task.assigneeUserId, user.id))
-    .where(
-      and(
-        eq(task.itemId, itemId),
-        isNull(task.deletedAt),
-      ),
-    )
+    .where(and(eq(task.itemId, itemId), isNull(task.deletedAt)))
     .orderBy(desc(task.createdAt));
 
   const commentsByTaskId = await listTaskCommentsByTaskId(
@@ -2606,6 +2830,7 @@ export async function getItemDetail(itemId: number): Promise<ItemDetail & { case
     caseId: i.caseId,
     caseTitle: i.caseTitle,
     projectName: i.projectName,
+    projectColor: i.projectColor,
     dateReported: i.dateReported,
     description: i.description,
     impact: i.impact,

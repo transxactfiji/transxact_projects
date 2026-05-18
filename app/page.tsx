@@ -1,65 +1,46 @@
-import { and, count, eq, inArray, isNull, lt } from "drizzle-orm";
-import db, { ensureDbSchema } from "@/db/connection";
-import { issue, project, task, user } from "@/db/schema";
-import DashboardView from "@/app/dashboardView";
 import type { ReactElement } from "react";
+import { redirect } from "next/navigation";
+import DashboardView from "@/app/dashboardView";
+import { getDashboardData } from "@/services/dashboard.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage(): Promise<ReactElement> {
-  await ensureDbSchema();
+  let data: Awaited<ReturnType<typeof getDashboardData>>;
+  try {
+    data = await getDashboardData();
+  } catch (error) {
+    if (error instanceof Error && error.message === "You must be signed in to continue.") {
+      redirect("/auth");
+    }
 
-  const nowIso = new Date().toISOString();
+    throw error;
+  }
 
-  const openTasksByAssignee = await db
-    .select({
-      assigneeName: user.name,
-      total: count(task.id),
-    })
-    .from(task)
-    .leftJoin(user, eq(task.assigneeUserId, user.id))
-    .where(
-      and(
-        isNull(task.deletedAt),
-        inArray(task.status, ["not_started", "in_progress"]),
-      ),
-    )
-    .groupBy(user.name);
+  const totalOpenTasks = data.openTasksByAssignee.reduce(
+    (sum, row) => sum + row.total,
+    0,
+  );
 
-  const overdueTasks = await db
-    .select({
-      total: count(task.id),
-    })
-    .from(task)
-    .where(
-      and(
-        isNull(task.deletedAt),
-        inArray(task.status, ["not_started", "in_progress"]),
-        lt(task.dueAt, nowIso),
-      ),
-    );
+  const totalOpenCases = data.openCasesByProject.reduce(
+    (sum, row) => sum + row.total,
+    0,
+  );
 
-  const openIssuesByProject = await db
-    .select({
-      projectName: project.name,
-      total: count(issue.id),
-    })
-    .from(issue)
-    .innerJoin(project, eq(issue.projectId, project.id))
-    .where(
-      and(
-        isNull(issue.deletedAt),
-        isNull(project.deletedAt),
-        inArray(issue.status, ["open", "in_progress"]),
-      ),
-    )
-    .groupBy(project.name);
+  const itemsPending = data.itemsByStatus
+    .filter((row) => row.status !== "closed")
+    .reduce((sum, row) => sum + row.total, 0);
 
   return (
     <DashboardView
-      openTasksByAssignee={openTasksByAssignee}
-      overdueTaskCount={overdueTasks[0]?.total ?? 0}
-      openIssuesByProject={openIssuesByProject}
+      openTasksByAssignee={data.openTasksByAssignee}
+      overdueTaskCount={data.overdueTaskCount}
+      openIssuesByProject={data.openIssuesByProject}
+      openCasesByProject={data.openCasesByProject}
+      itemsByStatus={data.itemsByStatus}
+      totalOpenTasks={totalOpenTasks}
+      totalOpenCases={totalOpenCases}
+      itemsPending={itemsPending}
     />
   );
 }

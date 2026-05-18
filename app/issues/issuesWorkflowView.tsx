@@ -235,7 +235,15 @@ export default function IssuesWorkflowView({
           <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
         ) : null}
         <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.projectName}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.projectColor && (
+              <span
+                className="inline-block w-2 h-2 rounded-full border border-border shrink-0"
+                style={{ backgroundColor: item.projectColor }}
+              />
+            )}
+            {item.projectName}
+          </span>
           {item.taskTitle && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.taskTitle}</span>}
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
         </div>
@@ -440,7 +448,7 @@ export default function IssuesWorkflowView({
                 </div>
               </div>
             ) : (
-              <div className="max-h-64 overflow-auto border rounded-md">
+              <div className="max-h-96 overflow-auto border rounded-md">
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr>
@@ -470,7 +478,17 @@ export default function IssuesWorkflowView({
                               ) : null}
                             </Link>
                           </td>
-                          <td className="border-b px-2 py-1.5 text-left">{item.projectName}</td>
+                          <td className="border-b px-2 py-1.5 text-left">
+                            <span className="inline-flex items-center gap-1">
+                              {item.projectColor && (
+                                <span
+                                  className="inline-block w-2.5 h-2.5 rounded-full border border-border shrink-0"
+                                  style={{ backgroundColor: item.projectColor }}
+                                />
+                              )}
+                              {item.projectName}
+                            </span>
+                          </td>
                           <td className="border-b px-2 py-1.5 text-left">{item.taskTitle ?? "-"}</td>
                           <td className="border-b px-2 py-1.5 text-left">{item.assigneeName ?? "Unassigned"}</td>
                           <td className="border-b px-2 py-1.5 text-left">

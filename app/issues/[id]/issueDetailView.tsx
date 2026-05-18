@@ -249,7 +249,15 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
             ) : (
               <>
                 <h1>{issue.title}</h1>
-                <p className="mt-1 text-muted-foreground text-xs">{issue.projectName}</p>
+                <p className="mt-1 text-muted-foreground text-xs inline-flex items-center gap-1">
+                  {issue.projectColor && (
+                    <span
+                      className="inline-block w-2.5 h-2.5 rounded-full border border-border shrink-0"
+                      style={{ backgroundColor: issue.projectColor }}
+                    />
+                  )}
+                  {issue.projectName}
+                </p>
               </>
             )}
           </div>
@@ -522,7 +530,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
           {issue.attachments.length === 0 ? (
             <p className="text-muted-foreground text-center">No attachments.</p>
           ) : (
-            <div className="max-h-64 overflow-auto border rounded-md">
+            <div className="max-h-96 overflow-auto border rounded-md">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>

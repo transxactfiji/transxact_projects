@@ -281,7 +281,15 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
             ) : (
               <>
                 <h1>{task.title}</h1>
-                <p className="mt-1 text-muted-foreground text-xs">{task.projectName} / {task.caseName} / {task.itemName}</p>
+                <p className="mt-1 text-muted-foreground text-xs inline-flex items-center gap-1">
+                  {task.projectColor && (
+                    <span
+                      className="inline-block w-2.5 h-2.5 rounded-full border border-border shrink-0"
+                      style={{ backgroundColor: task.projectColor }}
+                    />
+                  )}
+                  {task.projectName} / {task.caseName} / {task.itemName}
+                </p>
               </>
             )}
           </div>
@@ -542,7 +550,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
           {task.actions.length === 0 ? (
             <p className="text-muted-foreground text-center py-2">No actions yet.</p>
           ) : (
-            <div className="max-h-64 overflow-auto border rounded-md">
+            <div className="max-h-96 overflow-auto border rounded-md">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
@@ -612,7 +620,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
           {task.attachments.length === 0 ? (
             <p className="text-muted-foreground text-center py-2">No attachments.</p>
           ) : (
-            <div className="max-h-64 overflow-auto border rounded-md">
+            <div className="max-h-96 overflow-auto border rounded-md">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>

@@ -20,6 +20,7 @@ interface ItemDetailViewProps {
     caseId: number;
     caseTitle: string;
     projectName: string;
+    projectColor: string | null;
     dateReported: string;
     description: string;
     impact: string;
@@ -206,7 +207,13 @@ export default function ItemDetailView({ detail: initialDetail, assignees, caseI
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>{detail.description}</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+              {detail.projectColor && (
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full border border-border shrink-0"
+                  style={{ backgroundColor: detail.projectColor }}
+                />
+              )}
               {detail.projectName} / {detail.caseTitle}
             </p>
           </div>

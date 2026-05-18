@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/api-helpers";
 import { createCase, listCases } from "@/services/workflow.service";
+import type { CaseType } from "@/db/schema";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, customerName, projectId } = body;
+    const { title, description, customerName, projectId, type } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await createCase({ projectId, title, description, customerName });
+    const result = await createCase({ projectId, title, description, customerName, type: type as CaseType | undefined });
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return apiError(error);

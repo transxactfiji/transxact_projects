@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { FiArchive, FiEdit2, FiEye, FiEyeOff, FiPlus, FiRotateCcw, FiX } from "react-icons/fi";
+import { FiArchive, FiEdit2, FiEye, FiEyeOff, FiPlus, FiRotateCcw, FiTrash2, FiX } from "react-icons/fi";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
@@ -16,6 +16,7 @@ import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import {
   archiveProject,
   createProject,
+  deleteProject,
   restoreProject,
   setProjectFollow,
   updateProject,
@@ -47,14 +48,22 @@ export default function ProjectsWorkflowView({
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [projectColor, setProjectColor] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isArchivingId, setIsArchivingId] = useState<number | null>(null);
   const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(null);
   const [isEditingId, setIsEditingId] = useState<number | null>(null);
   const [editProjectName, setEditProjectName] = useState("");
+  const [editProjectDescription, setEditProjectDescription] = useState("");
+  const [editProjectColor, setEditProjectColor] = useState("");
   const [isSavingEditId, setIsSavingEditId] = useState<number | null>(null);
   const [status, setStatus] = useState<FormStatus | null>(null);
   const [confirmArchiveId, setConfirmArchiveId] = useState<number | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [isDeletingArchivedId, setIsDeletingArchivedId] = useState<number | null>(null);
+  const [confirmDeleteArchivedId, setConfirmDeleteArchivedId] = useState<number | null>(null);
   const [archivedProjects, setArchivedProjects] = useState<ProjectWorkflowItem[]>([]);
   const [showArchived, setShowArchived] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
@@ -81,8 +90,14 @@ export default function ProjectsWorkflowView({
 
     setIsCreating(true);
     try {
-      await createProject(projectName);
+      await createProject({
+        name: projectName,
+        description: projectDescription || undefined,
+        color: projectColor || undefined,
+      });
       setProjectName("");
+      setProjectDescription("");
+      setProjectColor("");
       toast.success("Project created");
       setIsModalOpen(false);
       router.refresh();
@@ -133,6 +148,51 @@ export default function ProjectsWorkflowView({
     }
   };
 
+  const handleDeleteRequest = (projectId: number): void => {
+    setConfirmDeleteId(projectId);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (confirmDeleteId === null) return;
+    const projectId = confirmDeleteId;
+    setConfirmDeleteId(null);
+    setIsDeletingId(projectId);
+    try {
+      await deleteProject(projectId);
+      setStatus({ tone: "success", message: "Project permanently deleted." });
+      toast.success("Project permanently deleted");
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to delete project.";
+      setStatus({ tone: "error", message });
+      toast.error(message);
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
+  const handleDeleteArchivedRequest = (projectId: number): void => {
+    setConfirmDeleteArchivedId(projectId);
+  };
+
+  const handleDeleteArchivedConfirm = async (): Promise<void> => {
+    if (confirmDeleteArchivedId === null) return;
+    const projectId = confirmDeleteArchivedId;
+    setConfirmDeleteArchivedId(null);
+    setIsDeletingArchivedId(projectId);
+    try {
+      await deleteProject(projectId);
+      toast.success("Project permanently deleted");
+      setArchivedProjects((prev) => prev.filter((p) => p.id !== projectId));
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to delete project.";
+      toast.error(message);
+    } finally {
+      setIsDeletingArchivedId(null);
+    }
+  };
+
   const handleShowArchived = async (): Promise<void> => {
     setShowArchived(true);
     setLoadingArchived(true);
@@ -164,12 +224,16 @@ export default function ProjectsWorkflowView({
 
   const handleStartEditProject = (item: ProjectWorkflowItem): void => {
     setEditProjectName(item.name);
+    setEditProjectDescription(item.description ?? "");
+    setEditProjectColor(item.color ?? "");
     setIsEditingId(item.id);
   };
 
   const handleCancelEditProject = (): void => {
     setIsEditingId(null);
     setEditProjectName("");
+    setEditProjectDescription("");
+    setEditProjectColor("");
   };
 
   const handleSaveEditProject = async (projectId: number): Promise<void> => {
@@ -180,13 +244,19 @@ export default function ProjectsWorkflowView({
 
     setIsSavingEditId(projectId);
     try {
-      await updateProject(projectId, editProjectName.trim());
+      await updateProject(projectId, {
+        name: editProjectName.trim(),
+        description: editProjectDescription || undefined,
+        color: editProjectColor || undefined,
+      });
       setIsEditingId(null);
       setEditProjectName("");
-      toast.success("Project renamed");
+      setEditProjectDescription("");
+      setEditProjectColor("");
+      toast.success("Project updated");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to rename project.";
+      const message = error instanceof Error ? error.message : "Unable to update project.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -231,7 +301,7 @@ export default function ProjectsWorkflowView({
           </div>
         </div>
 
-        <div className="max-h-64 overflow-auto border rounded-md">
+        <div className="max-h-96 overflow-auto border rounded-md">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
@@ -253,49 +323,36 @@ export default function ProjectsWorkflowView({
                 projects.map((item) => (
                   <tr key={item.id} className="transition-colors hover:bg-accent">
                     <td className="border-b px-2 py-1.5 text-left">
-                      {isEditingId === item.id ? (
-                        <div className="flex gap-2 items-center">
-                          <input
-                            className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground w-[200px]"
-                            value={editProjectName}
-                            onChange={(e) => setEditProjectName(e.target.value)}
-                            disabled={isSavingEditId === item.id}
+                      <div className="flex gap-2 items-center">
+                        {item.color && (
+                          <span
+                            className="inline-block w-3 h-3 rounded-full border border-border flex-shrink-0"
+                            style={{ backgroundColor: item.color }}
+                            title={item.color}
                           />
-                          <AppButton
-                            variant="ghost"
-                            onClick={() => void handleSaveEditProject(item.id)}
-                            disabled={isSavingEditId === item.id}
-                            isLoading={isSavingEditId === item.id}
-                            loadingLabel="Saving..."
-                          >
-                            Save
-                          </AppButton>
-                          <AppButton
-                            variant="ghost"
-                            onClick={handleCancelEditProject}
-                            disabled={isSavingEditId === item.id}
-                          >
-                            Cancel
-                          </AppButton>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex gap-2 items-center">
+                            <Link href="/tasks" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
+                              {item.name}
+                            </Link>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => handleStartEditProject(item)}
+                                  className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
+                                >
+                                  <FiEdit2 size={13} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit project</TooltipContent>
+                            </Tooltip>
+                          </div>
+                          {item.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[250px]">{item.description}</p>
+                          )}
                         </div>
-                      ) : (
-                        <div className="flex gap-2 items-center">
-                          <Link href="/tasks" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 text-sm">
-                            {item.name}
-                          </Link>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => handleStartEditProject(item)}
-                                className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
-                              >
-                                <FiEdit2 size={13} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>Rename</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      )}
+                      </div>
                     </td>
                     <td className="border-b px-2 py-1.5 text-left">{item.taskCount}</td>
                     <td className="border-b px-2 py-1.5 text-left">{item.openIssueCount}</td>
@@ -326,6 +383,15 @@ export default function ProjectsWorkflowView({
                         >
                           Archive
                         </AppButton>
+                        <AppButton
+                          variant="secondary"
+                          onClick={() => handleDeleteRequest(item.id)}
+                          isLoading={isDeletingId === item.id}
+                          loadingLabel="Deleting..."
+                          startIcon={<FiTrash2 aria-hidden="true" />}
+                        >
+                          Delete
+                        </AppButton>
                       </div>
                     </td>
                   </tr>
@@ -354,7 +420,7 @@ export default function ProjectsWorkflowView({
           ) : archivedProjects.length === 0 ? (
             <p className="text-muted-foreground text-center p-4">No archived projects.</p>
           ) : (
-            <div className="max-h-64 overflow-auto border rounded-md">
+            <div className="max-h-96 overflow-auto border rounded-md">
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr>
@@ -369,15 +435,26 @@ export default function ProjectsWorkflowView({
                       <td className="border-b px-2 py-1.5 text-left">{item.name}</td>
                       <td className="border-b px-2 py-1.5 text-left">{formatDate(item.createdAt)}</td>
                       <td className="border-b px-2 py-1.5 text-left">
-                        <AppButton
-                          variant="secondary"
-                          onClick={() => handleRestoreProject(item.id)}
-                          isLoading={restoringId === item.id}
-                          loadingLabel="Restoring..."
-                          startIcon={<FiRotateCcw aria-hidden="true" />}
-                        >
-                          Restore
-                        </AppButton>
+                        <div className="flex items-center gap-1.5">
+                          <AppButton
+                            variant="secondary"
+                            onClick={() => handleRestoreProject(item.id)}
+                            isLoading={restoringId === item.id}
+                            loadingLabel="Restoring..."
+                            startIcon={<FiRotateCcw aria-hidden="true" />}
+                          >
+                            Restore
+                          </AppButton>
+                          <AppButton
+                            variant="secondary"
+                            onClick={() => handleDeleteArchivedRequest(item.id)}
+                            isLoading={isDeletingArchivedId === item.id}
+                            loadingLabel="Deleting..."
+                            startIcon={<FiTrash2 aria-hidden="true" />}
+                          >
+                            Delete
+                          </AppButton>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -393,11 +470,13 @@ export default function ProjectsWorkflowView({
         onClose={() => {
           setIsModalOpen(false);
           setProjectName("");
+          setProjectDescription("");
+          setProjectColor("");
           setStatus(null);
         }}
         title="Create project"
       >
-        <div className="flex items-end gap-2 mb-2">
+        <div className="flex flex-col gap-3 mb-2">
           <TextField
             id="projectName"
             label="Project name"
@@ -410,6 +489,37 @@ export default function ProjectsWorkflowView({
             disabled={isCreating}
             required
           />
+          <TextField
+            id="projectDescription"
+            label="Description"
+            placeholder="Optional description of the project"
+            value={projectDescription}
+            onChange={(event) => setProjectDescription(event.target.value)}
+            disabled={isCreating}
+          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="projectColor" className="text-sm font-semibold text-muted-foreground">Color</label>
+            <div className="flex gap-2 items-center">
+              <input
+                id="projectColor"
+                type="color"
+                className="w-10 h-9 border rounded-md bg-accent cursor-pointer p-0.5"
+                value={projectColor || "#6366f1"}
+                onChange={(event) => setProjectColor(event.target.value)}
+                disabled={isCreating}
+              />
+              <input
+                type="text"
+                className="flex-1 border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
+                value={projectColor}
+                onChange={(event) => setProjectColor(event.target.value)}
+                placeholder="#6366f1"
+                disabled={isCreating}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
           <AppButton
             onClick={handleCreateProject}
             isLoading={isCreating}
@@ -423,6 +533,64 @@ export default function ProjectsWorkflowView({
           tone={status?.tone ?? "info"}
           message={status?.message ?? null}
         />
+      </Modal>
+
+      <Modal
+        isOpen={isEditingId !== null}
+        onClose={handleCancelEditProject}
+        title="Edit project"
+      >
+        <div className="flex flex-col gap-3 mb-2">
+          <TextField
+            id="editProjectName"
+            label="Project name"
+            value={editProjectName}
+            onChange={(e) => setEditProjectName(e.target.value)}
+            disabled={isSavingEditId !== null}
+            required
+          />
+          <TextField
+            id="editProjectDescription"
+            label="Description"
+            placeholder="Optional description of the project"
+            value={editProjectDescription}
+            onChange={(e) => setEditProjectDescription(e.target.value)}
+            disabled={isSavingEditId !== null}
+          />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="editProjectColor" className="text-sm font-semibold text-muted-foreground">Color</label>
+            <div className="flex gap-2 items-center">
+              <input
+                id="editProjectColor"
+                type="color"
+                className="w-10 h-9 border rounded-md bg-accent cursor-pointer p-0.5"
+                value={editProjectColor || "#6366f1"}
+                onChange={(e) => setEditProjectColor(e.target.value)}
+                disabled={isSavingEditId !== null}
+              />
+              <input
+                type="text"
+                className="flex-1 border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
+                value={editProjectColor}
+                onChange={(e) => setEditProjectColor(e.target.value)}
+                placeholder="#6366f1"
+                disabled={isSavingEditId !== null}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <AppButton variant="ghost" onClick={handleCancelEditProject} disabled={isSavingEditId !== null}>
+            Cancel
+          </AppButton>
+          <AppButton
+            onClick={() => void handleSaveEditProject(isEditingId!)}
+            isLoading={isSavingEditId !== null}
+            loadingLabel="Saving..."
+          >
+            Save changes
+          </AppButton>
+        </div>
       </Modal>
 
       {confirmArchiveId !== null && (
@@ -439,6 +607,45 @@ export default function ProjectsWorkflowView({
               </AppButton>
               <AppButton variant="primary" onClick={() => void handleArchiveConfirm()}>
                 Archive
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmDeleteId(null)}>
+          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete project</h3>
+            <p>
+              This will permanently delete the project and cannot be undone.
+              Consider archiving instead if you may need it later.
+            </p>
+            <div className="flex justify-end gap-1.5">
+              <AppButton variant="ghost" onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </AppButton>
+              <AppButton variant="primary" onClick={() => void handleDeleteConfirm()}>
+                Delete
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteArchivedId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmDeleteArchivedId(null)}>
+          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete project</h3>
+            <p>
+              This will permanently delete the archived project. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-1.5">
+              <AppButton variant="ghost" onClick={() => setConfirmDeleteArchivedId(null)}>
+                Cancel
+              </AppButton>
+              <AppButton variant="primary" onClick={() => void handleDeleteArchivedConfirm()}>
+                Delete
               </AppButton>
             </div>
           </div>

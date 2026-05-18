@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, parseIntegerParam } from "@/lib/api-helpers";
 import { deleteCase, getCaseDetail, updateCase } from "@/services/workflow.service";
-import type { CaseStatus } from "@/db/schema";
+import type { CaseStatus, CaseType } from "@/db/schema";
 
 export async function GET(
   _request: NextRequest,
@@ -30,6 +30,7 @@ export async function PATCH(
       title: body.title,
       description: body.description,
       customerName: body.customerName,
+      type: body.type as CaseType | undefined,
       status: body.status as CaseStatus | undefined,
     });
 

@@ -13,6 +13,7 @@ import TextField from "@/app/ui/textField";
 import { Badge } from "@/components/ui/badge";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import { createItem, updateCase, deleteCase, deleteItem, type CaseDetail } from "@/services/workflow.service";
+import type { CaseType } from "@/db/schema";
 
 interface CaseDetailViewProps {
   detail: CaseDetail;
@@ -44,6 +45,16 @@ const CASE_STATUS_OPTIONS = [
   { value: "open", label: "Open" },
   { value: "in_progress", label: "In Progress" },
   { value: "closed", label: "Closed" },
+];
+
+const CASE_TYPE_OPTIONS: { value: CaseType; label: string }[] = [
+  { value: "development", label: "Development" },
+  { value: "support", label: "Support" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "incident", label: "Incident" },
+  { value: "consulting", label: "Consulting" },
+  { value: "training", label: "Training" },
+  { value: "other", label: "Other" },
 ];
 
 function priorityVariant(priority: string): "default" | "secondary" | "destructive" {
@@ -92,6 +103,7 @@ export default function CaseDetailView({ detail: initialDetail }: CaseDetailView
   const [editDesc, setEditDesc] = useState(detail.description ?? "");
   const [editCustomer, setEditCustomer] = useState(detail.customerName ?? "");
   const [editStatus, setEditStatus] = useState<string>(detail.status);
+  const [editType, setEditType] = useState<CaseType>(detail.type);
 
   const refreshDetail = useCallback(async () => {
     try {
@@ -148,6 +160,7 @@ export default function CaseDetailView({ detail: initialDetail }: CaseDetailView
         title: editTitle,
         description: editDesc || undefined,
         customerName: editCustomer || undefined,
+        type: editType,
         status: editStatus as "open" | "in_progress" | "closed",
       });
       toast.success("Case updated.");
@@ -198,7 +211,15 @@ export default function CaseDetailView({ detail: initialDetail }: CaseDetailView
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
             <h2>{detail.title}</h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Project: {detail.projectName}</p>
+            <p className="text-sm text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+              {detail.projectColor && (
+                <span
+                  className="inline-block w-2.5 h-2.5 rounded-full border border-border shrink-0"
+                  style={{ backgroundColor: detail.projectColor }}
+                />
+              )}
+              Project: {detail.projectName}
+            </p>
             {detail.customerName && <p className="text-sm text-muted-foreground mt-0.5">Customer: {detail.customerName}</p>}
             {detail.description && <p className="text-sm text-muted-foreground mt-0.5">{detail.description}</p>}
           </div>
@@ -206,11 +227,15 @@ export default function CaseDetailView({ detail: initialDetail }: CaseDetailView
             <Badge variant={caseStatusVariant(detail.status)}>
               {detail.status === "open" ? "Open" : detail.status === "in_progress" ? "In Progress" : "Closed"}
             </Badge>
+            <Badge variant="secondary">
+              {CASE_TYPE_OPTIONS.find((o) => o.value === detail.type)?.label ?? detail.type}
+            </Badge>
             <AppButton variant="ghost" onClick={() => {
               setEditTitle(detail.title);
               setEditDesc(detail.description ?? "");
               setEditCustomer(detail.customerName ?? "");
               setEditStatus(detail.status);
+              setEditType(detail.type);
               setIsEditCaseOpen(true);
               setError(null);
             }}>
@@ -428,6 +453,19 @@ export default function CaseDetailView({ detail: initialDetail }: CaseDetailView
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
             />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="edit-type" className="text-sm font-semibold text-muted-foreground">Type</label>
+            <select
+              id="edit-type"
+              className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary"
+              value={editType}
+              onChange={(e) => setEditType(e.target.value as CaseType)}
+            >
+              {CASE_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="edit-status" className="text-sm font-semibold text-muted-foreground">Status</label>

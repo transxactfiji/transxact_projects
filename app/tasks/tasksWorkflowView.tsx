@@ -242,7 +242,15 @@ export default function TasksWorkflowView({
           <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
         ) : null}
         <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.projectName}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.projectColor && (
+              <span
+                className="inline-block w-2 h-2 rounded-full border border-border shrink-0"
+                style={{ backgroundColor: item.projectColor }}
+              />
+            )}
+            {item.projectName}
+          </span>
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.caseName}</span>
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.itemName}</span>
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
