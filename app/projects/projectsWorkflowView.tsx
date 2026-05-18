@@ -5,10 +5,24 @@ import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { FiArchive, FiEdit2, FiEye, FiEyeOff, FiPlus, FiRotateCcw, FiTrash2, FiX } from "react-icons/fi";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  FiArchive,
+  FiEdit2,
+  FiEye,
+  FiEyeOff,
+  FiPlus,
+  FiRotateCcw,
+  FiTrash2,
+  FiX,
+} from "react-icons/fi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import { FormStatus } from "@/app/ui/formStatus";
 import Modal from "@/app/ui/modal";
 import TextField from "@/app/ui/textField";
@@ -37,7 +51,8 @@ function formatDate(isoDate: string): string {
 function validateProjectName(rawProjectName: string): string | undefined {
   const normalizedName = rawProjectName.trim().replace(/\s+/g, " ");
   if (!normalizedName) return "Project name is required.";
-  if (normalizedName.length < 3) return "Project name must be at least 3 characters.";
+  if (normalizedName.length < 3)
+    return "Project name must be at least 3 characters.";
   return undefined;
 }
 
@@ -52,7 +67,9 @@ export default function ProjectsWorkflowView({
   const [projectColor, setProjectColor] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isArchivingId, setIsArchivingId] = useState<number | null>(null);
-  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(null);
+  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(
+    null,
+  );
   const [isEditingId, setIsEditingId] = useState<number | null>(null);
   const [editProjectName, setEditProjectName] = useState("");
   const [editProjectDescription, setEditProjectDescription] = useState("");
@@ -62,9 +79,15 @@ export default function ProjectsWorkflowView({
   const [confirmArchiveId, setConfirmArchiveId] = useState<number | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [isDeletingArchivedId, setIsDeletingArchivedId] = useState<number | null>(null);
-  const [confirmDeleteArchivedId, setConfirmDeleteArchivedId] = useState<number | null>(null);
-  const [archivedProjects, setArchivedProjects] = useState<ProjectWorkflowItem[]>([]);
+  const [isDeletingArchivedId, setIsDeletingArchivedId] = useState<
+    number | null
+  >(null);
+  const [confirmDeleteArchivedId, setConfirmDeleteArchivedId] = useState<
+    number | null
+  >(null);
+  const [archivedProjects, setArchivedProjects] = useState<
+    ProjectWorkflowItem[]
+  >([]);
   const [showArchived, setShowArchived] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
   const [restoringId, setRestoringId] = useState<number | null>(null);
@@ -102,7 +125,8 @@ export default function ProjectsWorkflowView({
       setIsModalOpen(false);
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to create project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to create project.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -110,14 +134,23 @@ export default function ProjectsWorkflowView({
     }
   };
 
-  const handleToggleFollow = async (projectId: number, follow: boolean): Promise<void> => {
+  const handleToggleFollow = async (
+    projectId: number,
+    follow: boolean,
+  ): Promise<void> => {
     setIsTogglingFollowId(projectId);
     try {
       await setProjectFollow(projectId, follow);
-      setStatus({ tone: "success", message: follow ? "Project followed." : "Project unfollowed." });
+      setStatus({
+        tone: "success",
+        message: follow ? "Project followed." : "Project unfollowed.",
+      });
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update follow state.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update follow state.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -140,7 +173,8 @@ export default function ProjectsWorkflowView({
       toast.success("Project archived");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to archive project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to archive project.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -163,7 +197,8 @@ export default function ProjectsWorkflowView({
       toast.success("Project permanently deleted");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to delete project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to delete project.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -186,7 +221,8 @@ export default function ProjectsWorkflowView({
       setArchivedProjects((prev) => prev.filter((p) => p.id !== projectId));
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to delete project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to delete project.";
       toast.error(message);
     } finally {
       setIsDeletingArchivedId(null);
@@ -200,7 +236,10 @@ export default function ProjectsWorkflowView({
       const archived = await listArchivedProjects();
       setArchivedProjects(archived);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to load archived projects.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to load archived projects.";
       toast.error(message);
     } finally {
       setLoadingArchived(false);
@@ -215,7 +254,8 @@ export default function ProjectsWorkflowView({
       setArchivedProjects((prev) => prev.filter((p) => p.id !== projectId));
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to restore project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to restore project.";
       toast.error(message);
     } finally {
       setRestoringId(null);
@@ -256,7 +296,8 @@ export default function ProjectsWorkflowView({
       toast.success("Project updated");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update project.";
+      const message =
+        error instanceof Error ? error.message : "Unable to update project.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -268,22 +309,28 @@ export default function ProjectsWorkflowView({
     <section className="flex flex-col gap-2 min-h-0">
       <div className="grid gap-2 grid-cols-3">
         <article className="border rounded-lg bg-card shadow-card p-2.5">
-          <p className="text-muted-foreground text-xs font-medium">Active projects</p>
+          <p className="text-muted-foreground text-xs font-medium">
+            Active projects
+          </p>
           <p className="mt-1 text-xl font-bold">{projects.length}</p>
         </article>
         <article className="border rounded-lg bg-card shadow-card p-2.5">
-          <p className="text-muted-foreground text-xs font-medium">Tracked tasks</p>
+          <p className="text-muted-foreground text-xs font-medium">
+            Tracked tasks
+          </p>
           <p className="mt-1 text-xl font-bold">{summary.totalTasks}</p>
         </article>
         <article className="border rounded-lg bg-card shadow-card p-2.5">
-          <p className="text-muted-foreground text-xs font-medium">Open issues</p>
+          <p className="text-muted-foreground text-xs font-medium">
+            Open issues
+          </p>
           <p className="mt-1 text-xl font-bold">{summary.totalOpenIssues}</p>
         </article>
       </div>
 
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Project workflow board</h2>
+          <PageHeading level={2}>Projects</PageHeading>
           <div className="flex items-center gap-1.5">
             <AppButton
               onClick={handleShowArchived}
@@ -301,111 +348,118 @@ export default function ProjectsWorkflowView({
           </div>
         </div>
 
-        <div className="max-h-96 overflow-auto border rounded-md">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr>
-                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
-                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Tasks</th>
-                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Open issues</th>
-                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
-                <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-muted-foreground text-center border-b px-2 py-1.5 text-left">
-                    No projects yet.
-                  </td>
-                </tr>
-              ) : (
-                projects.map((item) => (
-                  <tr key={item.id} className="transition-colors hover:bg-accent">
-                    <td className="border-b px-2 py-1.5 text-left">
-                      <div className="flex gap-2 items-center">
-                        {item.color && (
-                          <span
-                            className="inline-block w-3 h-3 rounded-full border border-border flex-shrink-0"
-                            style={{ backgroundColor: item.color }}
-                            title={item.color}
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex gap-2 items-center">
-                            <Link href="/tasks" className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80">
-                              {item.name}
-                            </Link>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() => handleStartEditProject(item)}
-                                  className="inline-flex items-center gap-1 border-0 bg-transparent text-primary cursor-pointer text-sm font-semibold p-0 transition-colors hover:text-primary/80"
-                                >
-                                  <FiEdit2 size={13} />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit project</TooltipContent>
-                            </Tooltip>
-                          </div>
-                          {item.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[250px]">{item.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="border-b px-2 py-1.5 text-left">{item.taskCount}</td>
-                    <td className="border-b px-2 py-1.5 text-left">{item.openIssueCount}</td>
-                    <td className="border-b px-2 py-1.5 text-left">{formatDate(item.createdAt)}</td>
-                    <td className="border-b px-2 py-1.5 text-left">
+        <div className="max-h-128 overflow-auto">
+          {projects.length === 0 ? (
+            <p className="text-muted-foreground text-center p-4">
+              No projects yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {projects.map((item) => (
+                <div
+                  key={item.id}
+                  className="border rounded-lg bg-card shadow-sm p-3 flex flex-col gap-2.5 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-start gap-2 min-w-0">
+                    {item.color && (
+                      <span
+                        className="inline-block w-3 h-3 rounded-full border border-border shrink-0 mt-1.5"
+                        style={{ backgroundColor: item.color }}
+                        title={item.color}
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <AppButton
-                          variant="secondary"
-                          onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
-                          isLoading={isTogglingFollowId === item.id}
-                          loadingLabel="Updating..."
-                          startIcon={
-                            item.isFollowing ? (
-                              <FiEyeOff aria-hidden="true" />
-                            ) : (
-                              <FiEye aria-hidden="true" />
-                            )
-                          }
+                        <Link
+                          href="/cases"
+                          className="text-primary font-semibold text-sm hover:text-primary/80 truncate"
                         >
-                          {item.isFollowing ? "Unfollow" : "Follow"}
-                        </AppButton>
-                        <AppButton
-                          variant="secondary"
-                          onClick={() => handleArchiveRequest(item.id)}
-                          isLoading={isArchivingId === item.id}
-                          loadingLabel="Archiving..."
-                          startIcon={<FiArchive aria-hidden="true" />}
-                        >
-                          Archive
-                        </AppButton>
-                        <AppButton
-                          variant="secondary"
-                          onClick={() => handleDeleteRequest(item.id)}
-                          isLoading={isDeletingId === item.id}
-                          loadingLabel="Deleting..."
-                          startIcon={<FiTrash2 aria-hidden="true" />}
-                        >
-                          Delete
-                        </AppButton>
+                          {item.name}
+                        </Link>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleStartEditProject(item)}
+                              className="inline-flex items-center border-0 bg-transparent text-muted-foreground cursor-pointer p-0 transition-colors hover:text-foreground shrink-0"
+                            >
+                              <FiEdit2 size={13} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit project</TooltipContent>
+                        </Tooltip>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 bg-accent rounded-full px-2 py-0.5 font-medium">
+                      {item.taskCount} {item.taskCount === 1 ? "task" : "tasks"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-accent rounded-full px-2 py-0.5 font-medium">
+                      {item.openIssueCount} open{" "}
+                      {item.openIssueCount === 1 ? "issue" : "issues"}
+                    </span>
+                    <span className="ml-auto">
+                      {formatDate(item.createdAt)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <AppButton
+                      variant="secondary"
+                      className="h-8 text-xs px-2"
+                      onClick={() =>
+                        handleToggleFollow(item.id, !item.isFollowing)
+                      }
+                      isLoading={isTogglingFollowId === item.id}
+                      loadingLabel="Updating..."
+                      startIcon={
+                        item.isFollowing ? (
+                          <FiEyeOff aria-hidden="true" />
+                        ) : (
+                          <FiEye aria-hidden="true" />
+                        )
+                      }
+                    >
+                      {item.isFollowing ? "Unfollow" : "Follow"}
+                    </AppButton>
+                    <AppButton
+                      variant="secondary"
+                      className="h-8 text-xs px-2"
+                      onClick={() => handleArchiveRequest(item.id)}
+                      isLoading={isArchivingId === item.id}
+                      loadingLabel="Archiving..."
+                      startIcon={<FiArchive aria-hidden="true" />}
+                    >
+                      Archive
+                    </AppButton>
+                    <AppButton
+                      variant="secondary"
+                      className="h-8 text-xs px-2"
+                      onClick={() => handleDeleteRequest(item.id)}
+                      isLoading={isDeletingId === item.id}
+                      loadingLabel="Deleting..."
+                      startIcon={<FiTrash2 aria-hidden="true" />}
+                    >
+                      Delete
+                    </AppButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       {showArchived && (
         <section className="rounded-lg border bg-card shadow-card p-2.5">
           <div className="flex flex-wrap gap-2 justify-between mb-2">
-            <h2>Archived projects</h2>
+            <PageHeading level={2}>Archived projects</PageHeading>
             <AppButton
               variant="ghost"
               onClick={() => setShowArchived(false)}
@@ -418,48 +472,66 @@ export default function ProjectsWorkflowView({
           {loadingArchived ? (
             <p className="text-muted-foreground text-center p-4">Loading...</p>
           ) : archivedProjects.length === 0 ? (
-            <p className="text-muted-foreground text-center p-4">No archived projects.</p>
+            <p className="text-muted-foreground text-center p-4">
+              No archived projects.
+            </p>
           ) : (
-            <div className="max-h-96 overflow-auto border rounded-md">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
-                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Created</th>
-                    <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {archivedProjects.map((item) => (
-                    <tr key={item.id} className="transition-colors hover:bg-accent">
-                      <td className="border-b px-2 py-1.5 text-left">{item.name}</td>
-                      <td className="border-b px-2 py-1.5 text-left">{formatDate(item.createdAt)}</td>
-                      <td className="border-b px-2 py-1.5 text-left">
-                        <div className="flex items-center gap-1.5">
-                          <AppButton
-                            variant="secondary"
-                            onClick={() => handleRestoreProject(item.id)}
-                            isLoading={restoringId === item.id}
-                            loadingLabel="Restoring..."
-                            startIcon={<FiRotateCcw aria-hidden="true" />}
-                          >
-                            Restore
-                          </AppButton>
-                          <AppButton
-                            variant="secondary"
-                            onClick={() => handleDeleteArchivedRequest(item.id)}
-                            isLoading={isDeletingArchivedId === item.id}
-                            loadingLabel="Deleting..."
-                            startIcon={<FiTrash2 aria-hidden="true" />}
-                          >
-                            Delete
-                          </AppButton>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="max-h-128 overflow-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {archivedProjects.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border rounded-lg bg-card shadow-sm p-3 flex flex-col gap-2.5 transition-shadow hover:shadow-md"
+                  >
+                    <div className="flex items-start gap-2 min-w-0">
+                      {item.color && (
+                        <span
+                          className="inline-block w-3 h-3 rounded-full border border-border shrink-0 mt-1.5"
+                          style={{ backgroundColor: item.color }}
+                          title={item.color}
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <span className="text-foreground font-semibold text-sm">
+                          {item.name}
+                        </span>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatDate(item.createdAt)}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <AppButton
+                        variant="secondary"
+                        className="h-8 text-xs px-2"
+                        onClick={() => handleRestoreProject(item.id)}
+                        isLoading={restoringId === item.id}
+                        loadingLabel="Restoring..."
+                        startIcon={<FiRotateCcw aria-hidden="true" />}
+                      >
+                        Restore
+                      </AppButton>
+                      <AppButton
+                        variant="secondary"
+                        className="h-8 text-xs px-2"
+                        onClick={() => handleDeleteArchivedRequest(item.id)}
+                        isLoading={isDeletingArchivedId === item.id}
+                        loadingLabel="Deleting..."
+                        startIcon={<FiTrash2 aria-hidden="true" />}
+                      >
+                        Delete
+                      </AppButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </section>
@@ -498,7 +570,12 @@ export default function ProjectsWorkflowView({
             disabled={isCreating}
           />
           <div className="flex flex-col gap-1">
-            <label htmlFor="projectColor" className="text-sm font-semibold text-muted-foreground">Color</label>
+            <label
+              htmlFor="projectColor"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Color
+            </label>
             <div className="flex gap-2 items-center">
               <input
                 id="projectColor"
@@ -558,7 +635,12 @@ export default function ProjectsWorkflowView({
             disabled={isSavingEditId !== null}
           />
           <div className="flex flex-col gap-1">
-            <label htmlFor="editProjectColor" className="text-sm font-semibold text-muted-foreground">Color</label>
+            <label
+              htmlFor="editProjectColor"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Color
+            </label>
             <div className="flex gap-2 items-center">
               <input
                 id="editProjectColor"
@@ -580,7 +662,11 @@ export default function ProjectsWorkflowView({
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <AppButton variant="ghost" onClick={handleCancelEditProject} disabled={isSavingEditId !== null}>
+          <AppButton
+            variant="ghost"
+            onClick={handleCancelEditProject}
+            disabled={isSavingEditId !== null}
+          >
             Cancel
           </AppButton>
           <AppButton
@@ -594,18 +680,30 @@ export default function ProjectsWorkflowView({
       </Modal>
 
       {confirmArchiveId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmArchiveId(null)}>
-          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
-            <h3>Archive project</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5"
+          onClick={() => setConfirmArchiveId(null)}
+        >
+          <div
+            className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PageHeading level={3}>Archive project</PageHeading>
             <p>
-              This will hide the project and its tasks/issues from the active workflow.
-              You can restore it from the archived list later.
+              This will hide the project and its tasks/issues from the active
+              workflow. You can restore it from the archived list later.
             </p>
             <div className="flex justify-end gap-1.5">
-              <AppButton variant="ghost" onClick={() => setConfirmArchiveId(null)}>
+              <AppButton
+                variant="ghost"
+                onClick={() => setConfirmArchiveId(null)}
+              >
                 Cancel
               </AppButton>
-              <AppButton variant="primary" onClick={() => void handleArchiveConfirm()}>
+              <AppButton
+                variant="primary"
+                onClick={() => void handleArchiveConfirm()}
+              >
                 Archive
               </AppButton>
             </div>
@@ -614,18 +712,30 @@ export default function ProjectsWorkflowView({
       )}
 
       {confirmDeleteId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmDeleteId(null)}>
-          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
-            <h3>Delete project</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PageHeading level={3}>Delete project</PageHeading>
             <p>
               This will permanently delete the project and cannot be undone.
               Consider archiving instead if you may need it later.
             </p>
             <div className="flex justify-end gap-1.5">
-              <AppButton variant="ghost" onClick={() => setConfirmDeleteId(null)}>
+              <AppButton
+                variant="ghost"
+                onClick={() => setConfirmDeleteId(null)}
+              >
                 Cancel
               </AppButton>
-              <AppButton variant="primary" onClick={() => void handleDeleteConfirm()}>
+              <AppButton
+                variant="primary"
+                onClick={() => void handleDeleteConfirm()}
+              >
                 Delete
               </AppButton>
             </div>
@@ -634,17 +744,30 @@ export default function ProjectsWorkflowView({
       )}
 
       {confirmDeleteArchivedId !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5" onClick={() => setConfirmDeleteArchivedId(null)}>
-          <div className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3" onClick={(e) => e.stopPropagation()}>
-            <h3>Delete project</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2.5"
+          onClick={() => setConfirmDeleteArchivedId(null)}
+        >
+          <div
+            className="w-full max-w-sm border rounded-lg bg-card shadow-elevated p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PageHeading level={3}>Delete project</PageHeading>
             <p>
-              This will permanently delete the archived project. This action cannot be undone.
+              This will permanently delete the archived project. This action
+              cannot be undone.
             </p>
             <div className="flex justify-end gap-1.5">
-              <AppButton variant="ghost" onClick={() => setConfirmDeleteArchivedId(null)}>
+              <AppButton
+                variant="ghost"
+                onClick={() => setConfirmDeleteArchivedId(null)}
+              >
                 Cancel
               </AppButton>
-              <AppButton variant="primary" onClick={() => void handleDeleteArchivedConfirm()}>
+              <AppButton
+                variant="primary"
+                onClick={() => void handleDeleteArchivedConfirm()}
+              >
                 Delete
               </AppButton>
             </div>

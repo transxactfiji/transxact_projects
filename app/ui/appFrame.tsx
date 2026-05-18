@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import ThemeToggle from "./themeToggle";
 import InboxControls from "./inboxControls";
 import LogoutButton from "./logoutButton";
+import PageHeading from "./pageHeading";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ReactElement, ReactNode } from "react";
@@ -330,14 +331,9 @@ export default function AppFrame({ children }: AppFrameProps): ReactElement {
                 </nav>
               )}
             </div>
-            <h1 className="inline-flex items-center gap-1.5 text-base font-semibold">
-              <PageIcon
-                className="shrink-0"
-                size={16}
-                aria-hidden="true"
-              />
-              <span>{pageMeta.title}</span>
-            </h1>
+            <PageHeading level={1} className="text-base" icon={<PageIcon className="shrink-0" size={16} aria-hidden="true" />}>
+              {pageMeta.title}
+            </PageHeading>
           </div>
           <div className="flex items-center gap-1.5">
             <InboxControls />

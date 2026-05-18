@@ -1,6 +1,7 @@
 import Link from "next/link";
 import RegisterForm from "./registerForm";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import type { ReactElement } from "react";
 import { FiArrowLeft, FiShield } from "react-icons/fi";
 
@@ -16,10 +17,7 @@ export default async function RegisterPage(
   if (!token) {
     return (
       <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
-        <h1 className="inline-flex items-center gap-1">
-          <FiShield aria-hidden="true" />
-          <span>Invalid invite link</span>
-        </h1>
+        <PageHeading level={1} icon={<FiShield aria-hidden="true" />}>Invalid invite link</PageHeading>
         <InlineStatus
           tone="error"
           message="This invite link is missing a token. Request a new invitation to continue."
@@ -39,10 +37,7 @@ export default async function RegisterPage(
 
   return (
     <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
-      <h1 className="inline-flex items-center gap-1">
-        <FiShield aria-hidden="true" />
-        <span>Complete your account setup</span>
-      </h1>
+      <PageHeading level={1} icon={<FiShield aria-hidden="true" />}>Complete your account setup</PageHeading>
       <p className="mt-1 text-muted-foreground text-sm">
         Add your details to activate your workspace access.
       </p>

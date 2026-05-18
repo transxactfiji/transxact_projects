@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FiArrowLeft, FiMail, FiUserPlus, FiCheckCircle } from "react-icons/fi";
 import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 
 export default function InviteUserPage() {
   const [loading, setLoading] = useState(false);
@@ -65,7 +66,7 @@ export default function InviteUserPage() {
       <div className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Invite New User</h2>
+            <PageHeading level={2}>Invite New User</PageHeading>
             <p>Send an invitation link to a new user to join the platform</p>
           </div>
         </div>
@@ -125,9 +126,7 @@ export default function InviteUserPage() {
 
         {invitedUsers.length > 0 && (
           <div className="mt-5 pt-5 border-t">
-            <h3 className="font-semibold mb-3">
-              Recently Invited Users
-            </h3>
+            <PageHeading level={3} className="mb-3">Recently Invited Users</PageHeading>
             <div className="mt-0 flex flex-col gap-2">
               {invitedUsers.map((user, index) => (
                 <div
@@ -152,9 +151,7 @@ export default function InviteUserPage() {
         )}
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-          <h3 className="font-semibold mb-3">
-            How it works
-          </h3>
+          <PageHeading level={3} className="mb-3">How it works</PageHeading>
           <div className="mt-0 flex flex-col gap-2">
             {[
               "Enter the user's email address and select their role",

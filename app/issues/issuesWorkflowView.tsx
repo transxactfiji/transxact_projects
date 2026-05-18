@@ -5,8 +5,22 @@ import { useRouter } from "next/navigation";
 import type { ReactElement } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { FiArrowLeft, FiChevronsRight, FiColumns, FiEye, FiEyeOff, FiList, FiPaperclip, FiPlus, FiSearch } from "react-icons/fi";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  FiArrowLeft,
+  FiChevronsRight,
+  FiColumns,
+  FiEye,
+  FiEyeOff,
+  FiList,
+  FiPaperclip,
+  FiPlus,
+  FiSearch,
+} from "react-icons/fi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
@@ -40,7 +54,8 @@ function issueStatusLabel(status: IssueWorkflowItem["status"]): string {
 
 type ViewMode = "table" | "kanban";
 
-const viewToggleBtnClass = "inline-flex items-center gap-1 border-0 bg-accent text-muted-foreground cursor-pointer text-sm font-semibold px-2 py-1.5 transition-colors hover:bg-muted hover:text-foreground";
+const viewToggleBtnClass =
+  "inline-flex items-center gap-1 border-0 bg-accent text-muted-foreground cursor-pointer text-sm font-semibold px-2 py-1.5 transition-colors hover:bg-muted hover:text-foreground";
 const viewToggleBtnActiveClass = "bg-primary/10 text-primary";
 
 export default function IssuesWorkflowView({
@@ -51,7 +66,9 @@ export default function IssuesWorkflowView({
 }: IssuesWorkflowViewProps): ReactElement {
   useSseRefresh();
   const router = useRouter();
-  const [projectId, setProjectId] = useState<string>(projects[0] ? String(projects[0].id) : "");
+  const [projectId, setProjectId] = useState<string>(
+    projects[0] ? String(projects[0].id) : "",
+  );
   const [taskId, setTaskId] = useState<string>("");
   const [assigneeUserId, setAssigneeUserId] = useState<string>("");
   const [title, setTitle] = useState("");
@@ -60,7 +77,9 @@ export default function IssuesWorkflowView({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancingId, setIsAdvancingId] = useState<number | null>(null);
   const [isReversingId, setIsReversingId] = useState<number | null>(null);
-  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(null);
+  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(
+    null,
+  );
   const [status, setStatus] = useState<FormStatus | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -76,11 +95,12 @@ export default function IssuesWorkflowView({
 
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter((i) =>
-        i.title.toLowerCase().includes(q) ||
-        (i.description?.toLowerCase().includes(q) ?? false) ||
-        i.projectName.toLowerCase().includes(q) ||
-        (i.assigneeName?.toLowerCase().includes(q) ?? false)
+      result = result.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          (i.description?.toLowerCase().includes(q) ?? false) ||
+          i.projectName.toLowerCase().includes(q) ||
+          (i.assigneeName?.toLowerCase().includes(q) ?? false),
       );
     }
 
@@ -99,12 +119,15 @@ export default function IssuesWorkflowView({
     return result;
   }, [issues, searchQuery, filterStatus, filterProjectId, projects]);
 
-  const kanbanGroups = useMemo(() => ({
-    open: filteredIssues.filter((i) => i.status === "open"),
-    inProgress: filteredIssues.filter((i) => i.status === "in_progress"),
-    resolved: filteredIssues.filter((i) => i.status === "resolved"),
-    closed: filteredIssues.filter((i) => i.status === "closed"),
-  }), [filteredIssues]);
+  const kanbanGroups = useMemo(
+    () => ({
+      open: filteredIssues.filter((i) => i.status === "open"),
+      inProgress: filteredIssues.filter((i) => i.status === "in_progress"),
+      resolved: filteredIssues.filter((i) => i.status === "resolved"),
+      closed: filteredIssues.filter((i) => i.status === "closed"),
+    }),
+    [filteredIssues],
+  );
 
   const filteredTaskOptions = useMemo(() => {
     if (!projectId) return [];
@@ -114,21 +137,32 @@ export default function IssuesWorkflowView({
 
   const handleProjectChange = (nextProjectId: string): void => {
     setProjectId(nextProjectId);
-    if (taskId && !tasks.some(
-      (item) => item.id === Number(taskId) && item.projectId === Number(nextProjectId),
-    )) {
+    if (
+      taskId &&
+      !tasks.some(
+        (item) =>
+          item.id === Number(taskId) &&
+          item.projectId === Number(nextProjectId),
+      )
+    ) {
       setTaskId("");
     }
   };
 
   const handleCreateIssue = async (): Promise<void> => {
     if (!projectId) {
-      setStatus({ tone: "error", message: "Select a project before creating an issue." });
+      setStatus({
+        tone: "error",
+        message: "Select a project before creating an issue.",
+      });
       return;
     }
     const normalizedTitle = title.trim();
     if (normalizedTitle.length < 3) {
-      setStatus({ tone: "error", message: "Issue title must be at least 3 characters." });
+      setStatus({
+        tone: "error",
+        message: "Issue title must be at least 3 characters.",
+      });
       return;
     }
 
@@ -146,10 +180,15 @@ export default function IssuesWorkflowView({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("issueId", String(result.id));
-        const uploadRes = await fetch("/api/uploads", { method: "POST", body: formData });
+        const uploadRes = await fetch("/api/uploads", {
+          method: "POST",
+          body: formData,
+        });
         if (!uploadRes.ok) {
           const data = await uploadRes.json();
-          throw new Error(data.error ?? "File upload failed. Issue was created.");
+          throw new Error(
+            data.error ?? "File upload failed. Issue was created.",
+          );
         }
       }
 
@@ -162,7 +201,8 @@ export default function IssuesWorkflowView({
       setIsModalOpen(false);
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to create issue.";
+      const message =
+        error instanceof Error ? error.message : "Unable to create issue.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -177,7 +217,10 @@ export default function IssuesWorkflowView({
       toast.success("Issue status updated");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update issue status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update issue status.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -192,7 +235,8 @@ export default function IssuesWorkflowView({
       toast.success("Issue moved back");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to move issue back.";
+      const message =
+        error instanceof Error ? error.message : "Unable to move issue back.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -200,14 +244,20 @@ export default function IssuesWorkflowView({
     }
   };
 
-  const handleToggleFollow = async (issueId: number, follow: boolean): Promise<void> => {
+  const handleToggleFollow = async (
+    issueId: number,
+    follow: boolean,
+  ): Promise<void> => {
     setIsTogglingFollowId(issueId);
     try {
       await setIssueFollow(issueId, follow);
       toast.success(follow ? "Issue followed" : "Issue unfollowed");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update follow state.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update follow state.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -221,18 +271,29 @@ export default function IssuesWorkflowView({
     const canGoBack = item.status !== "open";
     const canAdvance = item.status !== "closed";
     const nextLabel =
-      item.status === "open" ? "Start →"
-      : item.status === "in_progress" ? "Resolve →"
-      : item.status === "resolved" ? "Close →"
-      : null;
+      item.status === "open"
+        ? "Start →"
+        : item.status === "in_progress"
+          ? "Resolve →"
+          : item.status === "resolved"
+            ? "Close →"
+            : null;
 
     return (
-      <div key={item.id} className="border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm">
-        <Link href={`/issues/${item.id}`} className="font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline">
+      <div
+        key={item.id}
+        className="border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm"
+      >
+        <Link
+          href={`/issues/${item.id}`}
+          className="font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline"
+        >
           {item.title}
         </Link>
         {item.description ? (
-          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">
+            {item.description}
+          </div>
         ) : null}
         <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -244,8 +305,14 @@ export default function IssuesWorkflowView({
             )}
             {item.projectName}
           </span>
-          {item.taskTitle && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.taskTitle}</span>}
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
+          {item.taskTitle && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              {item.taskTitle}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.assigneeName ?? "Unassigned"}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-1 mt-0.5 pt-0.5 border-t">
           <div className="flex items-center gap-1.5">
@@ -256,10 +323,16 @@ export default function IssuesWorkflowView({
                   disabled={isTogglingFollowId === item.id}
                   className="inline-flex items-center justify-center w-6 h-6 rounded border-0 bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                  {item.isFollowing ? (
+                    <FiEyeOff size={14} />
+                  ) : (
+                    <FiEye size={14} />
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{item.isFollowing ? "Unfollow" : "Follow"}</TooltipContent>
+              <TooltipContent>
+                {item.isFollowing ? "Unfollow" : "Follow"}
+              </TooltipContent>
             </Tooltip>
           </div>
           <div className="flex items-center gap-1.5">
@@ -295,43 +368,40 @@ export default function IssuesWorkflowView({
   return (
     <section className="flex flex-col gap-2 min-h-0">
       <section className="rounded-lg border bg-card shadow-card p-2.5">
-        <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Issues</h2>
-          <div className="flex items-center gap-1.5">
-            <div className="inline-flex border rounded-md overflow-hidden">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`${viewToggleBtnClass} ${viewMode === "table" ? viewToggleBtnActiveClass : ""}`}
-                    onClick={() => setViewMode("table")}
-                  >
-                    <FiList size={14} />
-                    <span>Table</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Table view</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={`${viewToggleBtnClass} ${viewMode === "kanban" ? viewToggleBtnActiveClass : ""}`}
-                    onClick={() => setViewMode("kanban")}
-                  >
-                    <FiColumns size={14} />
-                    <span>Board</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Kanban view</TooltipContent>
-              </Tooltip>
-            </div>
-            <AppButton
-              onClick={() => setIsModalOpen(true)}
-              disabled={!hasProject}
-              startIcon={<FiPlus aria-hidden="true" />}
-            >
-              Create issue
-            </AppButton>
+        <div className="flex items-center gap-1.5">
+          <div className="inline-flex border rounded-md overflow-hidden">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={`${viewToggleBtnClass} ${viewMode === "table" ? viewToggleBtnActiveClass : ""}`}
+                  onClick={() => setViewMode("table")}
+                >
+                  <FiList size={14} />
+                  <span>Table</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Table view</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className={`${viewToggleBtnClass} ${viewMode === "kanban" ? viewToggleBtnActiveClass : ""}`}
+                  onClick={() => setViewMode("kanban")}
+                >
+                  <FiColumns size={14} />
+                  <span>Board</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Kanban view</TooltipContent>
+            </Tooltip>
           </div>
+          <AppButton
+            onClick={() => setIsModalOpen(true)}
+            disabled={!hasProject}
+            startIcon={<FiPlus aria-hidden="true" />}
+          >
+            Create issue
+          </AppButton>
         </div>
 
         {!hasProject && (
@@ -344,7 +414,10 @@ export default function IssuesWorkflowView({
         {issues.length === 0 && hasProject ? (
           <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
             <div className="text-muted-foreground opacity-40">
-              <FiSearch size={32} aria-hidden="true" />
+              <FiSearch
+                size={32}
+                aria-hidden="true"
+              />
             </div>
             <p className="text-lg font-semibold">No issues yet</p>
             <p>Create your first issue to track problems and bugs.</p>
@@ -384,7 +457,12 @@ export default function IssuesWorkflowView({
               >
                 <option value="">All projects</option>
                 {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option
+                    key={p.id}
+                    value={p.id}
+                  >
+                    {p.name}
+                  </option>
                 ))}
               </select>
               {clearFiltersActive && (
@@ -409,41 +487,65 @@ export default function IssuesWorkflowView({
                 <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-blue-50 dark:bg-blue-950/30">
                   <div className="flex items-center gap-1 px-0.5">
                     <span className="font-semibold text-sm">Open</span>
-                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.open.length}</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                      {kanbanGroups.open.length}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.open.map(kanbanIssueCard)}
-                    {kanbanGroups.open.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
+                    {kanbanGroups.open.length === 0 && (
+                      <p className="px-0.5 text-sm text-muted-foreground">
+                        No issues
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-amber-50 dark:bg-amber-950/30">
                   <div className="flex items-center gap-1 px-0.5">
                     <span className="font-semibold text-sm">In Progress</span>
-                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.inProgress.length}</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                      {kanbanGroups.inProgress.length}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.inProgress.map(kanbanIssueCard)}
-                    {kanbanGroups.inProgress.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
+                    {kanbanGroups.inProgress.length === 0 && (
+                      <p className="px-0.5 text-sm text-muted-foreground">
+                        No issues
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0">
                   <div className="flex items-center gap-1 px-0.5">
                     <span className="font-semibold text-sm">Resolved</span>
-                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.resolved.length}</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                      {kanbanGroups.resolved.length}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.resolved.map(kanbanIssueCard)}
-                    {kanbanGroups.resolved.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
+                    {kanbanGroups.resolved.length === 0 && (
+                      <p className="px-0.5 text-sm text-muted-foreground">
+                        No issues
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-emerald-50 dark:bg-emerald-950/30">
                   <div className="flex items-center gap-1 px-0.5">
                     <span className="font-semibold text-sm">Closed</span>
-                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{kanbanGroups.closed.length}</span>
+                    <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                      {kanbanGroups.closed.length}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
                     {kanbanGroups.closed.map(kanbanIssueCard)}
-                    {kanbanGroups.closed.length === 0 && <p className="px-0.5 text-sm text-muted-foreground">No issues</p>}
+                    {kanbanGroups.closed.length === 0 && (
+                      <p className="px-0.5 text-sm text-muted-foreground">
+                        No issues
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -452,29 +554,70 @@ export default function IssuesWorkflowView({
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Issue</th>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Project</th>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Task</th>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Assignee</th>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Status</th>
-                      <th scope="col" className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b">Action</th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Issue
+                      </th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Project
+                      </th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Task
+                      </th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Assignee
+                      </th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className="sticky top-0 z-10 bg-accent text-muted-foreground text-xs font-bold uppercase tracking-wider px-2 py-1.5 text-left border-b"
+                      >
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredIssues.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-muted-foreground text-center border-b px-2 py-1.5 text-left">
+                        <td
+                          colSpan={6}
+                          className="text-muted-foreground text-center border-b px-2 py-1.5"
+                        >
                           No issues match your filters.
                         </td>
                       </tr>
                     ) : (
                       filteredIssues.map((item) => (
-                        <tr key={item.id} className="transition-colors hover:bg-accent">
+                        <tr
+                          key={item.id}
+                          className="transition-colors hover:bg-accent"
+                        >
                           <td className="border-b px-2 py-1.5 text-left">
-                            <Link href={`/issues/${item.id}`} className="no-underline text-inherit block">
+                            <Link
+                              href={`/issues/${item.id}`}
+                              className="no-underline text-inherit block"
+                            >
                               <div className="font-semibold">{item.title}</div>
                               {item.description ? (
-                                <p className="mt-1 text-muted-foreground text-xs">{item.description}</p>
+                                <p className="mt-1 text-muted-foreground text-xs">
+                                  {item.description}
+                                </p>
                               ) : null}
                             </Link>
                           </td>
@@ -489,8 +632,12 @@ export default function IssuesWorkflowView({
                               {item.projectName}
                             </span>
                           </td>
-                          <td className="border-b px-2 py-1.5 text-left">{item.taskTitle ?? "-"}</td>
-                          <td className="border-b px-2 py-1.5 text-left">{item.assigneeName ?? "Unassigned"}</td>
+                          <td className="border-b px-2 py-1.5 text-left">
+                            {item.taskTitle ?? "-"}
+                          </td>
+                          <td className="border-b px-2 py-1.5 text-left">
+                            {item.assigneeName ?? "Unassigned"}
+                          </td>
                           <td className="border-b px-2 py-1.5 text-left">
                             <span className="inline-flex items-center border rounded-full bg-accent text-muted-foreground text-xs font-semibold px-1.5 py-0.5">
                               {issueStatusLabel(item.status)}
@@ -500,7 +647,9 @@ export default function IssuesWorkflowView({
                             <div className="flex items-center gap-1.5">
                               <AppButton
                                 variant="secondary"
-                                onClick={() => handleToggleFollow(item.id, !item.isFollowing)}
+                                onClick={() =>
+                                  handleToggleFollow(item.id, !item.isFollowing)
+                                }
                                 isLoading={isTogglingFollowId === item.id}
                                 loadingLabel="Updating..."
                                 startIcon={
@@ -519,7 +668,9 @@ export default function IssuesWorkflowView({
                                 disabled={item.status === "closed"}
                                 isLoading={isAdvancingId === item.id}
                                 loadingLabel="Updating..."
-                                startIcon={<FiChevronsRight aria-hidden="true" />}
+                                startIcon={
+                                  <FiChevronsRight aria-hidden="true" />
+                                }
                               >
                                 Advance
                               </AppButton>
@@ -547,7 +698,12 @@ export default function IssuesWorkflowView({
       >
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="issue-project" className="text-sm font-semibold text-muted-foreground">Project</label>
+            <label
+              htmlFor="issue-project"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Project
+            </label>
             <select
               id="issue-project"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
@@ -556,13 +712,23 @@ export default function IssuesWorkflowView({
               disabled={isSubmitting}
             >
               {projects.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="issue-task" className="text-sm font-semibold text-muted-foreground">Linked task</label>
+            <label
+              htmlFor="issue-task"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Linked task
+            </label>
             <select
               id="issue-task"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
@@ -572,13 +738,23 @@ export default function IssuesWorkflowView({
             >
               <option value="">None</option>
               {filteredTaskOptions.map((item) => (
-                <option key={item.id} value={item.id}>{item.title}</option>
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.title}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="issue-assignee" className="text-sm font-semibold text-muted-foreground">Assignee</label>
+            <label
+              htmlFor="issue-assignee"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Assignee
+            </label>
             <select
               id="issue-assignee"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
@@ -588,7 +764,12 @@ export default function IssuesWorkflowView({
             >
               <option value="">Unassigned</option>
               {assignees.map((item) => (
-                <option key={item.id} value={item.id}>{item.label}</option>
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.label}
+                </option>
               ))}
             </select>
           </div>
@@ -607,7 +788,12 @@ export default function IssuesWorkflowView({
           />
 
           <div className="flex flex-col gap-1 col-span-2">
-            <label htmlFor="issue-description" className="text-sm font-semibold text-muted-foreground">Description</label>
+            <label
+              htmlFor="issue-description"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Description
+            </label>
             <textarea
               id="issue-description"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-16 resize-y"
@@ -619,7 +805,9 @@ export default function IssuesWorkflowView({
           </div>
 
           <div className="flex flex-col gap-1 col-span-2">
-            <span className="text-sm font-semibold text-muted-foreground">Attachment</span>
+            <span className="text-sm font-semibold text-muted-foreground">
+              Attachment
+            </span>
             <div className="flex items-center gap-2">
               <AppButton
                 variant="secondary"

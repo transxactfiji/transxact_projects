@@ -21,6 +21,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { getInitials, getAvatarColorByUserId } from "@/lib/utils";
@@ -469,10 +470,9 @@ export default function MessagesView({
         ) : (
           <>
             <header className="flex items-center justify-between gap-1.5 px-2.5 py-2 border-b min-h-10">
-              <h2>
-                <FiMessageSquare size={16} className="inline-block mr-1.5 align-middle opacity-60" aria-hidden="true" />
+              <PageHeading level={2} icon={<FiMessageSquare size={16} className="opacity-60" aria-hidden="true" />}>
                 {activeConversation.participantLabel}
-              </h2>
+              </PageHeading>
               <div className="flex items-center gap-0.5 shrink-0">
                 <Tooltip>
                   <TooltipTrigger asChild>

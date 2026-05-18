@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
 import TextField from "@/app/ui/textField";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import { FormStatus } from "@/app/ui/formStatus";
 import { Loading } from "@/app/ui/loading";
 import { formatDateTime } from "@/lib/utils";
@@ -126,10 +127,7 @@ export default function ProfilePage() {
     <section className="flex flex-col gap-2 min-h-0">
       <div className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2 className="inline-flex items-center gap-1">
-            <FiUser aria-hidden="true" />
-            <span>Profile</span>
-          </h2>
+          <PageHeading level={2} icon={<FiUser aria-hidden="true" />}>Profile</PageHeading>
         </div>
 
         <div className="mt-0 flex flex-col gap-2">
@@ -196,10 +194,7 @@ export default function ProfilePage() {
 
       <div className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2 className="inline-flex items-center gap-1">
-            <FiMonitor aria-hidden="true" />
-            <span>Sessions</span>
-          </h2>
+          <PageHeading level={2} icon={<FiMonitor aria-hidden="true" />}>Sessions</PageHeading>
         </div>
 
         <div className="max-h-64 overflow-auto border rounded-md">

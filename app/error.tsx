@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { ReactElement } from "react";
 import { FiAlertTriangle, FiRefreshCw } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 
 export default function ErrorPage({
   error,
@@ -20,7 +21,7 @@ export default function ErrorPage({
     <section className="flex flex-col items-center justify-center p-4">
       <div className="border rounded-lg bg-card shadow-card text-center py-16 px-8 max-w-[480px] my-16 mx-auto">
         <FiAlertTriangle size={48} className="text-destructive mb-4" />
-        <h1 className="mb-2">Something went wrong</h1>
+        <PageHeading level={1} className="mb-2">Something went wrong</PageHeading>
         <p className="text-muted-foreground mb-6 leading-relaxed">
           An unexpected error occurred. Please try again or contact support if the problem persists.
         </p>

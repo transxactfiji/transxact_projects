@@ -10,6 +10,7 @@ import TextField from "@/app/ui/textField";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
+import PageHeading from "@/app/ui/pageHeading";
 
 function validateEmail(rawEmail: string): string | undefined {
   const normalizedEmail = rawEmail.trim().toLowerCase();
@@ -75,10 +76,7 @@ export default function AuthPage(): ReactElement {
   if (showCodeInput) {
     return (
       <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
-        <h1 className="inline-flex items-center gap-1">
-          <FiKey aria-hidden="true" />
-          <span>Enter your login code</span>
-        </h1>
+        <PageHeading level={1} icon={<FiKey aria-hidden="true" />}>Enter your login code</PageHeading>
         <p className="mt-1 text-muted-foreground text-sm">
           Enter the code sent to <strong>{email}</strong>.
         </p>
@@ -99,10 +97,7 @@ export default function AuthPage(): ReactElement {
 
   return (
     <section className="w-full max-w-md border rounded-lg bg-card shadow-card p-4">
-      <h1 className="inline-flex items-center gap-1">
-        <FiMail aria-hidden="true" />
-        <span>Login</span>
-      </h1>
+      <PageHeading level={1} icon={<FiMail aria-hidden="true" />}>Login</PageHeading>
       <p className="mt-1 text-muted-foreground text-sm">
         We use one-time codes for secure login. Enter your email to continue.
       </p>

@@ -5,8 +5,22 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { toast } from "sonner";
-import { FiArrowLeft, FiCheckSquare, FiEye, FiEyeOff, FiMessageCircle, FiMessageSquare, FiPaperclip, FiPlus, FiSearch } from "react-icons/fi";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  FiArrowLeft,
+  FiCheckSquare,
+  FiEye,
+  FiEyeOff,
+  FiMessageCircle,
+  FiMessageSquare,
+  FiPaperclip,
+  FiPlus,
+  FiSearch,
+} from "react-icons/fi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { FormStatus } from "@/app/ui/formStatus";
@@ -61,7 +75,9 @@ export default function TasksWorkflowView({
   useSseRefresh();
   const router = useRouter();
   const [itemId, setItemId] = useState<string>("");
-  const [assigneeUserId, setAssigneeUserId] = useState<string>(String(currentUserId));
+  const [assigneeUserId, setAssigneeUserId] = useState<string>(
+    String(currentUserId),
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueOn, setDueOn] = useState(defaultDueOn);
@@ -69,7 +85,9 @@ export default function TasksWorkflowView({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancingId, setIsAdvancingId] = useState<number | null>(null);
   const [isReversingId, setIsReversingId] = useState<number | null>(null);
-  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(null);
+  const [isTogglingFollowId, setIsTogglingFollowId] = useState<number | null>(
+    null,
+  );
   const [status, setStatus] = useState<FormStatus | null>(null);
   const [commentTaskId, setCommentTaskId] = useState<number | null>(null);
   const [commentTaskTitle, setCommentTaskTitle] = useState("");
@@ -89,13 +107,14 @@ export default function TasksWorkflowView({
 
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      result = result.filter((t) =>
-        t.title.toLowerCase().includes(q) ||
-        (t.description?.toLowerCase().includes(q) ?? false) ||
-        t.projectName.toLowerCase().includes(q) ||
-        t.caseName.toLowerCase().includes(q) ||
-        t.itemName.toLowerCase().includes(q) ||
-        (t.assigneeName?.toLowerCase().includes(q) ?? false)
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.description?.toLowerCase().includes(q) ?? false) ||
+          t.projectName.toLowerCase().includes(q) ||
+          t.caseName.toLowerCase().includes(q) ||
+          t.itemName.toLowerCase().includes(q) ||
+          (t.assigneeName?.toLowerCase().includes(q) ?? false),
       );
     }
 
@@ -116,26 +135,47 @@ export default function TasksWorkflowView({
     }
 
     if (filterOverdue) {
-      result = result.filter((t) => isOverdue(t.dueAt) && t.status !== "completed");
+      result = result.filter(
+        (t) => isOverdue(t.dueAt) && t.status !== "completed",
+      );
     }
 
     return result;
-  }, [tasks, searchQuery, filterProjectId, filterAssigneeId, filterOverdue, projects, assignees]);
+  }, [
+    tasks,
+    searchQuery,
+    filterProjectId,
+    filterAssigneeId,
+    filterOverdue,
+    projects,
+    assignees,
+  ]);
 
-  const taskCounts = useMemo(() => ({
-    notStarted: filteredTasks.filter((t) => t.status === "not_started").length,
-    inProgress: filteredTasks.filter((t) => t.status === "in_progress").length,
-    completed: filteredTasks.filter((t) => t.status === "completed").length,
-  }), [filteredTasks]);
+  const taskCounts = useMemo(
+    () => ({
+      notStarted: filteredTasks.filter((t) => t.status === "not_started")
+        .length,
+      inProgress: filteredTasks.filter((t) => t.status === "in_progress")
+        .length,
+      completed: filteredTasks.filter((t) => t.status === "completed").length,
+    }),
+    [filteredTasks],
+  );
 
   const handleCreateTask = async (): Promise<void> => {
     const normalizedTitle = title.trim();
     if (!itemId) {
-      setStatus({ tone: "error", message: "Select an item before creating a task." });
+      setStatus({
+        tone: "error",
+        message: "Select an item before creating a task.",
+      });
       return;
     }
     if (normalizedTitle.length < 3) {
-      setStatus({ tone: "error", message: "Task title must be at least 3 characters." });
+      setStatus({
+        tone: "error",
+        message: "Task title must be at least 3 characters.",
+      });
       return;
     }
     if (!dueOn) {
@@ -157,10 +197,15 @@ export default function TasksWorkflowView({
         const formData = new FormData();
         formData.append("file", file);
         formData.append("taskId", String(result.id));
-        const uploadRes = await fetch("/api/uploads", { method: "POST", body: formData });
+        const uploadRes = await fetch("/api/uploads", {
+          method: "POST",
+          body: formData,
+        });
         if (!uploadRes.ok) {
           const data = await uploadRes.json();
-          throw new Error(data.error ?? "File upload failed. Task was created.");
+          throw new Error(
+            data.error ?? "File upload failed. Task was created.",
+          );
         }
       }
 
@@ -172,7 +217,8 @@ export default function TasksWorkflowView({
       setIsModalOpen(false);
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to create task.";
+      const message =
+        error instanceof Error ? error.message : "Unable to create task.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -187,7 +233,10 @@ export default function TasksWorkflowView({
       toast.success("Task status updated");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update task status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update task status.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -202,7 +251,8 @@ export default function TasksWorkflowView({
       toast.success("Task moved back");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to move task back.";
+      const message =
+        error instanceof Error ? error.message : "Unable to move task back.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -210,14 +260,20 @@ export default function TasksWorkflowView({
     }
   };
 
-  const handleToggleFollow = async (taskId: number, follow: boolean): Promise<void> => {
+  const handleToggleFollow = async (
+    taskId: number,
+    follow: boolean,
+  ): Promise<void> => {
     setIsTogglingFollowId(taskId);
     try {
       await setTaskFollow(taskId, follow);
       toast.success(follow ? "Task followed" : "Task unfollowed");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update follow state.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to update follow state.";
       setStatus({ tone: "error", message });
       toast.error(message);
     } finally {
@@ -227,19 +283,29 @@ export default function TasksWorkflowView({
 
   const kanbanCard = (item: TaskWorkflowItem) => {
     const canGoBack =
-      (item.status === "in_progress" || item.status === "completed");
+      item.status === "in_progress" || item.status === "completed";
     const nextLabel =
-      item.status === "not_started" ? "Start →"
-      : item.status === "in_progress" ? "Complete →"
-      : null;
+      item.status === "not_started"
+        ? "Start →"
+        : item.status === "in_progress"
+          ? "Complete →"
+          : null;
 
     return (
-      <div key={item.id} className="kanban-card border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm">
-        <Link href={`/tasks/${item.id}`} className="kanban-card-title font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline">
+      <div
+        key={item.id}
+        className="kanban-card border rounded-md bg-card p-1.5 flex flex-col gap-0.5 transition-shadow hover:shadow-sm"
+      >
+        <Link
+          href={`/tasks/${item.id}`}
+          className="kanban-card-title font-semibold text-sm text-foreground hover:text-primary leading-tight no-underline"
+        >
           {item.title}
         </Link>
         {item.description ? (
-          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">{item.description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-1 leading-tight">
+            {item.description}
+          </div>
         ) : null}
         <div className="flex flex-wrap gap-x-1 gap-y-0.5 mt-0.5">
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -251,10 +317,20 @@ export default function TasksWorkflowView({
             )}
             {item.projectName}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.caseName}</span>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.itemName}</span>
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">{item.assigneeName ?? "Unassigned"}</span>
-          <span className={`inline-flex items-center gap-1 text-xs ${isOverdue(item.dueAt) ? "text-destructive" : "text-muted-foreground"}`}>Due {formatDueDate(item.dueAt)}</span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.caseName}
+          </span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.itemName}
+          </span>
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            {item.assigneeName ?? "Unassigned"}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 text-xs ${isOverdue(item.dueAt) ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            Due {formatDueDate(item.dueAt)}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-1 mt-0.5 pt-0.5 border-t">
           <div className="flex items-center gap-1.5">
@@ -265,10 +341,16 @@ export default function TasksWorkflowView({
                   disabled={isTogglingFollowId === item.id}
                   className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  {item.isFollowing ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                  {item.isFollowing ? (
+                    <FiEyeOff size={14} />
+                  ) : (
+                    <FiEye size={14} />
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{item.isFollowing ? "Unfollow" : "Follow"}</TooltipContent>
+              <TooltipContent>
+                {item.isFollowing ? "Unfollow" : "Follow"}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -280,7 +362,10 @@ export default function TasksWorkflowView({
                   className="inline-flex items-center justify-center w-6 h-6 border-0 rounded bg-transparent text-muted-foreground cursor-pointer transition-colors hover:bg-accent hover:text-foreground"
                 >
                   {item.unreadCommentCount > 0 ? (
-                    <FiMessageCircle size={14} className="text-primary" />
+                    <FiMessageCircle
+                      size={14}
+                      className="text-primary"
+                    />
                   ) : (
                     <FiMessageSquare size={14} />
                   )}
@@ -333,23 +418,19 @@ export default function TasksWorkflowView({
     );
   };
 
-  const clearFiltersActive = searchQuery || filterProjectId || filterAssigneeId || filterOverdue;
+  const clearFiltersActive =
+    searchQuery || filterProjectId || filterAssigneeId || filterOverdue;
 
   return (
     <section className="flex flex-col gap-2 min-h-0">
       <section className="rounded-lg border bg-card shadow-card p-2.5">
-        <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Task workflow board</h2>
-          <div className="flex items-center gap-1.5">
-            <AppButton
-              onClick={() => setIsModalOpen(true)}
-              disabled={!hasProject}
-              startIcon={<FiPlus aria-hidden="true" />}
-            >
-              Create task
-            </AppButton>
-          </div>
-        </div>
+        <AppButton
+          onClick={() => setIsModalOpen(true)}
+          disabled={!hasProject}
+          startIcon={<FiPlus aria-hidden="true" />}
+        >
+          Create task
+        </AppButton>
 
         {!hasProject && (
           <InlineStatus
@@ -361,7 +442,10 @@ export default function TasksWorkflowView({
         {tasks.length === 0 && hasProject ? (
           <div className="flex flex-col items-center gap-1.5 py-6 px-3 text-muted-foreground text-sm text-center">
             <div className="text-muted-foreground">
-              <FiCheckSquare size={32} aria-hidden="true" />
+              <FiCheckSquare
+                size={32}
+                aria-hidden="true"
+              />
             </div>
             <p className="font-semibold">No tasks yet</p>
             <p>Create your first task to start tracking work.</p>
@@ -389,7 +473,12 @@ export default function TasksWorkflowView({
               >
                 <option value="">All projects</option>
                 {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option
+                    key={p.id}
+                    value={p.id}
+                  >
+                    {p.name}
+                  </option>
                 ))}
               </select>
               <select
@@ -400,7 +489,12 @@ export default function TasksWorkflowView({
               >
                 <option value="">All assignees</option>
                 {assignees.map((a) => (
-                  <option key={a.id} value={a.id}>{a.label}</option>
+                  <option
+                    key={a.id}
+                    value={a.id}
+                  >
+                    {a.label}
+                  </option>
                 ))}
               </select>
               <Tooltip>
@@ -439,33 +533,57 @@ export default function TasksWorkflowView({
               <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-blue-50 dark:bg-blue-950/30">
                 <div className="flex items-center gap-1 px-0.5">
                   <span className="font-semibold text-sm">Not Started</span>
-                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.notStarted}</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                    {taskCounts.notStarted}
+                  </span>
                 </div>
                 <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
-                  {filteredTasks.filter((t) => t.status === "not_started").map(kanbanCard)}
-                  {taskCounts.notStarted === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
+                  {filteredTasks
+                    .filter((t) => t.status === "not_started")
+                    .map(kanbanCard)}
+                  {taskCounts.notStarted === 0 && (
+                    <p className="px-0.5 text-sm text-muted-foreground">
+                      No tasks
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-amber-50 dark:bg-amber-950/30">
                 <div className="flex items-center gap-1 px-0.5">
                   <span className="font-semibold text-sm">In Progress</span>
-                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.inProgress}</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                    {taskCounts.inProgress}
+                  </span>
                 </div>
                 <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
-                  {filteredTasks.filter((t) => t.status === "in_progress").map(kanbanCard)}
-                  {taskCounts.inProgress === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
+                  {filteredTasks
+                    .filter((t) => t.status === "in_progress")
+                    .map(kanbanCard)}
+                  {taskCounts.inProgress === 0 && (
+                    <p className="px-0.5 text-sm text-muted-foreground">
+                      No tasks
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5 min-w-56 flex-1 rounded-md p-1.5 min-h-0 bg-emerald-50 dark:bg-emerald-950/30">
                 <div className="flex items-center gap-1 px-0.5">
                   <span className="font-semibold text-sm">Completed</span>
-                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">{taskCounts.completed}</span>
+                  <span className="text-xs font-semibold rounded-full px-1.5 leading-snug">
+                    {taskCounts.completed}
+                  </span>
                 </div>
                 <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 pr-0.5">
-                  {filteredTasks.filter((t) => t.status === "completed").map(kanbanCard)}
-                  {taskCounts.completed === 0 && <p className="px-0.5 text-sm text-muted-foreground">No tasks</p>}
+                  {filteredTasks
+                    .filter((t) => t.status === "completed")
+                    .map(kanbanCard)}
+                  {taskCounts.completed === 0 && (
+                    <p className="px-0.5 text-sm text-muted-foreground">
+                      No tasks
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -484,7 +602,12 @@ export default function TasksWorkflowView({
       >
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div className="flex flex-col gap-1">
-            <label htmlFor="task-item" className="text-sm font-semibold text-muted-foreground">Item</label>
+            <label
+              htmlFor="task-item"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Item
+            </label>
             <select
               id="task-item"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
@@ -494,13 +617,23 @@ export default function TasksWorkflowView({
             >
               <option value="">Select an item...</option>
               {items.map((item) => (
-                <option key={item.id} value={item.id}>{item.projectName} / {item.caseTitle} / {item.description}</option>
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.projectName} / {item.caseTitle} / {item.description}
+                </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="task-assignee" className="text-sm font-semibold text-muted-foreground">Assignee</label>
+            <label
+              htmlFor="task-assignee"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Assignee
+            </label>
             <select
               id="task-assignee"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground"
@@ -509,7 +642,12 @@ export default function TasksWorkflowView({
               disabled={isSubmitting}
             >
               {assignees.map((item) => (
-                <option key={item.id} value={item.id}>{item.label}</option>
+                <option
+                  key={item.id}
+                  value={item.id}
+                >
+                  {item.label}
+                </option>
               ))}
             </select>
           </div>
@@ -528,7 +666,12 @@ export default function TasksWorkflowView({
           />
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="task-due-on" className="text-sm font-semibold text-muted-foreground">Due date</label>
+            <label
+              htmlFor="task-due-on"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Due date
+            </label>
             <input
               id="task-due-on"
               type="date"
@@ -541,7 +684,12 @@ export default function TasksWorkflowView({
           </div>
 
           <div className="flex flex-col gap-1 col-span-2">
-            <label htmlFor="task-description" className="text-sm font-semibold text-muted-foreground">Description</label>
+            <label
+              htmlFor="task-description"
+              className="text-sm font-semibold text-muted-foreground"
+            >
+              Description
+            </label>
             <textarea
               id="task-description"
               className="w-full border rounded-md bg-accent text-foreground text-sm px-2.5 py-1.5 transition-colors focus:border-primary placeholder:text-muted-foreground min-h-16 resize-y"
@@ -553,7 +701,9 @@ export default function TasksWorkflowView({
           </div>
 
           <div className="flex flex-col gap-1 col-span-2">
-            <span className="text-sm font-semibold text-muted-foreground">Attachment</span>
+            <span className="text-sm font-semibold text-muted-foreground">
+              Attachment
+            </span>
             <div className="flex items-center gap-2">
               <AppButton
                 variant="secondary"
@@ -585,7 +735,7 @@ export default function TasksWorkflowView({
         </div>
 
         <div className="flex items-center gap-2">
-            <AppButton
+          <AppButton
             onClick={handleCreateTask}
             disabled={!itemId}
             isLoading={isSubmitting}

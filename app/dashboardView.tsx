@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 import InlineStatus from "@/app/ui/inlineStatus";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import type {
@@ -177,7 +178,7 @@ export default function DashboardView({
 
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Open cases by project</h2>
+          <PageHeading level={2}>Open cases by project</PageHeading>
           <div className="flex items-center gap-1.5">
             <Input
               type="search"
@@ -235,7 +236,7 @@ export default function DashboardView({
 
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Items by status</h2>
+          <PageHeading level={2}>Items by status</PageHeading>
         </div>
 
         <div className="max-h-96 overflow-auto border rounded-md">
@@ -279,7 +280,7 @@ export default function DashboardView({
 
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Open tasks by assignee</h2>
+          <PageHeading level={2}>Open tasks by assignee</PageHeading>
           <div className="flex items-center gap-1.5">
             <Input
               type="search"
@@ -337,7 +338,7 @@ export default function DashboardView({
 
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Open issues by project</h2>
+          <PageHeading level={2}>Open issues by project</PageHeading>
           <div className="flex items-center gap-1.5">
             <Input
               type="search"

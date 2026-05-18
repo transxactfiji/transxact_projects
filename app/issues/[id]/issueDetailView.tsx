@@ -7,6 +7,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye, FiPaperclip, FiDownload } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import { formatDateTime } from "@/lib/utils";
@@ -248,7 +249,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
               />
             ) : (
               <>
-                <h1>{issue.title}</h1>
+                <PageHeading level={1}>{issue.title}</PageHeading>
                 <p className="mt-1 text-muted-foreground text-xs inline-flex items-center gap-1">
                   {issue.projectColor && (
                     <span
@@ -354,7 +355,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Comments ({issue.comments.length})</h2>
+            <PageHeading level={2}>Comments ({issue.comments.length})</PageHeading>
           </div>
         </div>
 
@@ -501,7 +502,7 @@ export default function IssueDetailView({ issue }: IssueDetailViewProps): ReactE
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Attachments ({issue.attachments.length})</h2>
+            <PageHeading level={2}>Attachments ({issue.attachments.length})</PageHeading>
           </div>
         </div>
 

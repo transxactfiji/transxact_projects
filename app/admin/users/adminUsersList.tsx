@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import { Spinner } from "@/app/ui/loading";
 import Modal from "@/app/ui/modal";
 import { statusBadgeClassMap, roleBadgeClassMap } from "@/app/ui/formStatus";
@@ -227,7 +228,7 @@ export function AdminUsersList() {
       <div className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>User Management</h2>
+            <PageHeading level={2}>User Management</PageHeading>
             <p>Manage system users, roles, and permissions</p>
           </div>
           <div className="flex items-center gap-1.5">

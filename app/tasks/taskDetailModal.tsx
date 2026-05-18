@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { FiExternalLink, FiHeart, FiEye, FiCheckCircle } from "react-icons/fi";
 import Modal from "@/app/ui/modal";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 import { formatDateTime, formatDueDate } from "@/lib/utils";
 import {
   getTaskDetailById,
@@ -101,7 +102,7 @@ export default function TaskDetailModal({
           <div className="flex items-start gap-2">
             <FiCheckCircle size={20} className="mt-0.5 shrink-0 text-primary" />
             <div>
-              <h2 className="m-0 text-lg font-semibold">{task.title}</h2>
+              <PageHeading level={2} className="text-lg">{task.title}</PageHeading>
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {task.projectName} · {task.caseName} · {task.itemName}
               </p>

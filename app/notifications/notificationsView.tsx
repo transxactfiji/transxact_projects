@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { FiCheckCircle, FiExternalLink } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import { formatDateTime } from "@/lib/utils";
 import {
   markAllNotificationsAsRead,
@@ -107,7 +108,7 @@ export default function NotificationsView({
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Notification settings</h2>
+            <PageHeading level={2}>Notification settings</PageHeading>
             <p>Control in-app and email channels by category.</p>
           </div>
         </div>
@@ -165,7 +166,7 @@ export default function NotificationsView({
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>All notifications</h2>
+            <PageHeading level={2}>All notifications</PageHeading>
             <p>Review activity and open the linked destination.</p>
           </div>
           <AppButton

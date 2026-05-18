@@ -7,6 +7,7 @@ import type { ReactElement } from "react";
 import { toast } from "sonner";
 import { FiArrowLeft, FiEdit2, FiTrash2, FiHeart, FiEye, FiPaperclip, FiDownload } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
+import PageHeading from "@/app/ui/pageHeading";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSseRefresh } from "@/app/ui/useSseRefresh";
 import { formatDateTime, formatDueDate, getInitials, getAvatarColorByLabel } from "@/lib/utils";
@@ -280,7 +281,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
               />
             ) : (
               <>
-                <h1>{task.title}</h1>
+                <PageHeading level={1}>{task.title}</PageHeading>
                 <p className="mt-1 text-muted-foreground text-xs inline-flex items-center gap-1">
                   {task.projectColor && (
                     <span
@@ -389,7 +390,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Comments ({task.comments.length})</h2>
+            <PageHeading level={2}>Comments ({task.comments.length})</PageHeading>
           </div>
         </div>
 
@@ -511,7 +512,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Actions ({task.actions.length})</h2>
+            <PageHeading level={2}>Actions ({task.actions.length})</PageHeading>
           </div>
         </div>
 
@@ -591,7 +592,7 @@ export default function TaskDetailView({ task, hideBackLink = false }: TaskDetai
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Attachments ({task.attachments.length})</h2>
+            <PageHeading level={2}>Attachments ({task.attachments.length})</PageHeading>
           </div>
         </div>
 

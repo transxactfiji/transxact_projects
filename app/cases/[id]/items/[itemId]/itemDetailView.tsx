@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { FiArrowLeft, FiPlus, FiTrash2 } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import Modal from "@/app/ui/modal";
 import TextField from "@/app/ui/textField";
 import { Badge } from "@/components/ui/badge";
@@ -206,7 +207,7 @@ export default function ItemDetailView({ detail: initialDetail, assignees, caseI
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>{detail.description}</h2>
+            <PageHeading level={2}>{detail.description}</PageHeading>
             <p className="text-sm text-muted-foreground mt-0.5 inline-flex items-center gap-1">
               {detail.projectColor && (
                 <span
@@ -255,7 +256,7 @@ export default function ItemDetailView({ detail: initialDetail, assignees, caseI
         </p>
 
         <div className="flex flex-wrap gap-2 justify-between items-center mb-2">
-          <h3 className="text-sm font-semibold">Tasks ({detail.tasks.length})</h3>
+          <PageHeading level={3}>Tasks ({detail.tasks.length})</PageHeading>
           <AppButton
             onClick={() => {
               setIsTaskModalOpen(true);

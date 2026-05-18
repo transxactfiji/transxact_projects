@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { FiCheckCircle, FiExternalLink } from "react-icons/fi";
 import AppButton from "@/app/ui/appButton";
 import InlineStatus from "@/app/ui/inlineStatus";
+import PageHeading from "@/app/ui/pageHeading";
 import { formatDateTime } from "@/lib/utils";
 import {
   resolveMessageReport,
@@ -49,7 +50,7 @@ export default function ReportsView({ reports }: ReportsViewProps): ReactElement
       <section className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
           <div>
-            <h2>Abuse report queue</h2>
+            <PageHeading level={2}>Abuse report queue</PageHeading>
             <p>Review conversation and message reports from users.</p>
           </div>
         </div>

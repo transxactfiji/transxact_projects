@@ -7,6 +7,7 @@ import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { toast } from "sonner";
 import AppButton from "@/app/ui/appButton";
 import { Loading } from "@/app/ui/loading";
+import PageHeading from "@/app/ui/pageHeading";
 import { statusBadgeClassMap, roleBadgeClassMap } from "@/app/ui/formStatus";
 
 interface User {
@@ -165,7 +166,7 @@ export function AdminUserDetail({ userId }: { userId: number }) {
       <div className="grid grid-cols-1 gap-5">
         <div className="rounded-lg border bg-card shadow-card p-2.5">
           <div className="flex flex-wrap gap-2 justify-between mb-2">
-            <h2>User Information</h2>
+            <PageHeading level={2}>User Information</PageHeading>
           </div>
 
           <div className="mt-0 flex flex-col gap-2">
@@ -202,7 +203,7 @@ export function AdminUserDetail({ userId }: { userId: number }) {
 
         <div className="rounded-lg border bg-card shadow-card p-2.5">
           <div className="flex flex-wrap gap-2 justify-between mb-2">
-            <h2>Manage User</h2>
+            <PageHeading level={2}>Manage User</PageHeading>
           </div>
 
           <div className="mt-0 flex flex-col gap-2">
@@ -279,7 +280,7 @@ export function AdminUserDetail({ userId }: { userId: number }) {
 
       <div className="rounded-lg border bg-card shadow-card p-2.5">
         <div className="flex flex-wrap gap-2 justify-between mb-2">
-          <h2>Audit Log</h2>
+          <PageHeading level={2}>Audit Log</PageHeading>
         </div>
 
         {auditLogs.length === 0 ? (
